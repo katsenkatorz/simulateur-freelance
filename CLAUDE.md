@@ -4,42 +4,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Projet
 
-Simulateur fiscal freelance — composant React (JSX) standalone qui compare 5 statuts juridiques français : Micro-entreprise, EI, EURL, SASU, SASU+Holding. Permet de visualiser le net après IR/IS selon le CA, le nombre de parts fiscales, le régime (IR/IS) et la stratégie (tout en salaire vs capitalisation).
+Simulateur fiscal freelance — app Next.js 16 (TypeScript, App Router) qui compare 5 statuts juridiques français : Micro-entreprise BNC, EI, EURL, SASU, SASU+Holding. Barème fiscal 2026. Visualise le net après IR/IS selon le CA, parts fiscales, régime (IR/IS), stratégie (tout en salaire vs capitalisation) et seuil IS (42.5k standard ou 100k PLF 2026).
 
-## Structure
+## Commandes
 
-Un seul fichier : `Fiscal Comparison EU EURL SASU 100k.jsx`. Pas de package.json, pas de bundler, pas de tests. Le composant exporte `App` par défaut et utilise React (useState, useMemo) — il est conçu pour être importé dans un environnement React existant ou un playground (ex: val.town, CodeSandbox).
+```bash
+npm run dev     # Dev server (Turbopack)
+npm run build   # Build production
+npm run start   # Serveur production
+```
 
-## Architecture du fichier
+## Architecture
 
-Le fichier s'organise en couches :
+```
+app/layout.tsx          # Fonts (next/font/google) + metadata
+app/page.tsx            # Server component → importe <App />
+app/globals.css         # Reset minimal
+components/simulateur.tsx  # Composant principal ("use client", ~500 lignes)
+lib/fiscal.ts           # Constantes fiscales 2026 centralisées
+```
 
-1. **Moteur fiscal** (lignes 1-96) — Fonctions de calcul pures :
-   - `calcIR(revenuNet, parts)` : barème progressif IR 2024 avec quotient familial et plafonnement
-   - `calcIS(profit)` : IS à taux réduit 15% (≤42 500€) puis 25%
-   - `simMicro`, `simTNS_A/B`, `simSASU_A/B`, `simHolding` : simulateurs par statut. Mode A = tout en salaire, Mode B = salaire choisi + capitalisation (IS requis)
-   - `retInfo`, `mkTNS`, `mkSASU`, `mkMicro` : calculs retraite et ventilation cotisations
+### `lib/fiscal.ts` — Constantes fiscales 2026
 
-2. **Visualisation SVG** (lignes 98-214) — Diagrammes de flux animés (CSS dash-array) :
-   - `FlowSimple` : flux linéaire (Micro, EI/EURL/SASU mode A)
-   - `FlowSplitG` : flux avec split salaire/capitalisation (mode B)
-   - `FlowHoldingA/B` : flux SASU → Holding avec régime mère-fille
+Toutes les constantes sont extraites ici pour faciliter les mises à jour annuelles :
+- PASS, plafond micro BNC, barème IR (tranches), plafond QF
+- Taux cotisations micro (25.6%), TNS (~43%), SASU (~77%)
+- IS : seuil standard (42 500 €) + seuil PLF 2026 (100 000 €, toggle UI)
+- Seuils trimestres retraite
 
-3. **Composants UI** (lignes 216-235) — Barres, lignes détail, tableaux cotisations, toggle
+### `components/simulateur.tsx` — Composant principal
 
-4. **App principale** (lignes 238-412) — State, orchestration des sims, rendu des cards et du détail
+Organisé en couches :
 
-## Constantes fiscales clés
+1. **Moteur fiscal** — Fonctions de calcul pures :
+   - `calcIR(revenuNet, parts)` : barème progressif IR 2026 avec quotient familial
+   - `calcIS(profit, seuil)` : IS 15%/25% avec seuil paramétrique
+   - `simMicro`, `simTNS_A/B`, `simSASU_A/B`, `simHolding` : simulateurs par statut
+   - Mode A = tout en salaire, Mode B = capitalisation (IS requis)
 
-- `PASS = 46 368` (Plafond Annuel Sécurité Sociale)
-- `MICRO_CAP = 77 700` (plafond micro-entreprise BNC)
-- TNS ~43%, charges SASU ~77% du brut, IS 15%/25%
-- Barème IR 2024 : 0% / 11% / 30% / 41% / 45%
+2. **Visualisation SVG** — Diagrammes de flux animés (CSS dash-array) :
+   - `FlowSimple`, `FlowSplitG`, `FlowHoldingA/B`
+
+3. **Composants UI** — `Bar`, `LI`, `BarsViz`, `Toggle`, `CotisT`, `RetB`, `CapUsage`
+
+4. **App** — State, orchestration des sims, rendu des cards + détail
 
 ## Conventions
 
 - Toutes les valeurs sont annuelles en euros HT
 - `fmt(n)` formate en "XX XXX €" (locale fr-FR)
-- Les objets simulation retournent `{ ca, co, ir, net, ret, lines }` — `lines` alimente les composants d'affichage
+- Les objets simulation retournent `{ ca, co, ir, net, ret, lines }`
 - Chaque line a un type `t` : `"n"` neutre, `"s"` solde, `"c"` charge, `"x"` impôt
-- Fonts externes : JetBrains Mono + Space Grotesk (Google Fonts)
+- Fonts via CSS variables : `var(--font-jetbrains)`, `var(--font-space-grotesk)`
+- Micro-entreprise = BNC (abattement 34%), pas BIC
