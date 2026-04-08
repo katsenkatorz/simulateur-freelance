@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+const { useState, useMemo } = React;
 
 const PASS = 46368, MICRO_CAP = 77700;
 function calcIR(rn, p) { const parts = p || 1, base = rn * 0.9, pp = base / parts; const tr = [[11294, 0], [28797, 0.11], [82341, 0.30], [177106, 0.41], [1e9, 0.45]]; let tax = 0, prev = 0; for (const [l, r] of tr) { if (pp <= prev) break; tax += Math.max(0, Math.min(pp, l) - prev) * r; prev = l; } let tot = Math.round(tax * parts); if (parts > 1) { let a = 0; prev = 0; for (const [l, r] of tr) { if (base <= prev) break; a += Math.max(0, Math.min(base, l) - prev) * r; prev = l; } const ben = Math.round(a) - tot, mx = Math.round((parts - 1) * 2 * 1759); if (ben > mx) tot = Math.round(a) - mx; } return Math.max(0, tot); }
@@ -235,7 +235,7 @@ function Toggle({ options, value, onChange, size }) {
 }
 
 // ===== MAIN =====
-export default function App() {
+function App() {
   const [ca, setCa] = useState(100000);
   const [parts, setParts] = useState(1);
   const [sel, setSel] = useState(null);
