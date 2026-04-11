@@ -140,8 +140,8 @@ export function Sidebar({
         </div>
       </div>
 
-      {/* Separator */}
-      <div className="h-px bg-border-subtle" />
+      {/* Separator — params spécifiques au statut */}
+      <div className="h-px bg-border-default" />
 
       {/* Régime fiscal (per-status) */}
       {showRegimeToggle && (
