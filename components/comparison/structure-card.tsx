@@ -4,9 +4,11 @@ import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/engine";
 import { useAnimatedNumber } from "@/hooks/use-animated-number";
 import type { StructConfig } from "@/lib/types";
+import type { ElementType } from "react";
 
 interface StructureCardProps {
   struct: StructConfig;
+  icon?: ElementType;
   net: number;
   ret: number;
   ca: number;
@@ -15,7 +17,7 @@ interface StructureCardProps {
   onClick: () => void;
 }
 
-export function StructureCard({ struct, net, ret, ca, isB, selected, onClick }: StructureCardProps) {
+export function StructureCard({ struct, icon: Icon, net, ret, ca, isB, selected, onClick }: StructureCardProps) {
   const total = net + ret;
   const pct = ca > 0 ? Math.round(total / ca * 100) : 0;
   const animNet = useAnimatedNumber(net);
@@ -32,12 +34,12 @@ export function StructureCard({ struct, net, ret, ca, isB, selected, onClick }: 
       )}
     >
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-lg">{struct.icon}</span>
-        <span className={cn("text-sm font-semibold", selected ? "text-text-primary" : "text-text-secondary")}>
+        {Icon && <Icon size={16} className={cn("shrink-0", selected ? "text-text-primary" : "text-text-tertiary")} />}
+        <span className={cn("text-sm font-semibold truncate", selected ? "text-text-primary" : "text-text-secondary")}>
           {struct.name}
         </span>
         {isB && (
-          <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded bg-text-primary/5 text-text-secondary">
+          <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded bg-text-primary/5 text-text-secondary shrink-0">
             B
           </span>
         )}
@@ -64,11 +66,10 @@ export function StructureCard({ struct, net, ret, ca, isB, selected, onClick }: 
         </div>
       )}
 
-      {/* Bar */}
       <div className="w-full h-1 bg-bg-primary rounded-full overflow-hidden mb-1">
         <div
           className="h-full rounded-full transition-all duration-500"
-          style={{ width: pct + "%", background: selected ? struct.accent : "#52525b" }}
+          style={{ width: pct + "%", background: selected ? "#fafafa" : "#52525b" }}
         />
       </div>
       <div className="text-[10px] text-text-tertiary">{pct}%</div>

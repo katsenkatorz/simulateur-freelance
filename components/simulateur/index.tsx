@@ -18,6 +18,16 @@ import { StructureCard } from "@/components/comparison/structure-card";
 import { SankeyOverview } from "@/components/comparison/sankey-overview";
 import { FlowTab } from "@/components/detail/flow-tab";
 import { simToSankey } from "@/lib/sankey";
+import { User, FileText, Building2, Landmark, Layers } from "lucide-react";
+import type { ElementType } from "react";
+
+const STRUCT_ICONS: Record<string, ElementType> = {
+  micro: User,
+  ei: FileText,
+  eurl: Building2,
+  sasu: Landmark,
+  holding: Layers,
+};
 
 // --- Primitives UI ---
 function Bar({ v, mx, c }: { v: number; mx: number; c: string }) {
@@ -191,11 +201,11 @@ export default function App() {
   }
 
   const structs: StructConfig[] = [
-    { id: "micro", name: "Micro", icon: "🧑‍💻", color: "#2563eb", accent: "#60a5fa", noB: true },
-    { id: "ei", name: "EI " + regEI, icon: "📋", color: "#0891b2", accent: "#2dd4bf", noB: !eiCanB },
-    { id: "eurl", name: "EURL " + regEURL, icon: "🏢", color: "#059669", accent: "#34d399", noB: !eurlCanB },
-    { id: "sasu", name: "SASU " + regSASU, icon: "🏛️", color: "#7c3aed", accent: "#a78bfa", noB: !sasuCanB },
-    { id: "holding", name: "SASU+Holding", icon: "🏗️", color: "#d97706", accent: "#fbbf24", noB: false },
+    { id: "micro", name: "Micro", icon: "micro", color: "#2563eb", accent: "#60a5fa", noB: true },
+    { id: "ei", name: "EI " + regEI, icon: "ei", color: "#0891b2", accent: "#2dd4bf", noB: !eiCanB },
+    { id: "eurl", name: "EURL " + regEURL, icon: "eurl", color: "#059669", accent: "#34d399", noB: !eurlCanB },
+    { id: "sasu", name: "SASU " + regSASU, icon: "sasu", color: "#7c3aed", accent: "#a78bfa", noB: !sasuCanB },
+    { id: "holding", name: "SASU+Holding", icon: "holding", color: "#d97706", accent: "#fbbf24", noB: false },
   ];
 
   const openD = (id: string) => { setSel(sel === id ? null : id); setTab("overview"); };
@@ -240,8 +250,9 @@ export default function App() {
       <div className="mt-6 border border-border-subtle rounded-xl overflow-hidden bg-bg-card">
         <div className="px-4 md:px-6 pt-5 pb-0 border-b border-border-subtle">
           <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-            <h2 className="text-xl font-bold text-text-primary">
-              {st.icon} {st.name}
+            <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+              {(() => { const Icon = STRUCT_ICONS[st.id]; return Icon ? <Icon size={20} className="text-text-secondary" /> : null; })()}
+              {st.name}
               <span className="text-sm text-text-tertiary font-normal ml-2">
                 Mode {st.noB ? "A" : gm}{!st.noB && gm === "B" && " · Capitalise"}
               </span>
@@ -257,7 +268,7 @@ export default function App() {
                   {fmt(mandatM)}<span className="text-text-tertiary font-normal text-xs">/mois</span>
                 </span>
               </div>
-              <input type="range" min={1000} max={Math.max(maxMandat, 2000)} step={500} value={mandatM} onChange={e => setMandatM(+e.target.value)} className="w-full cursor-pointer cursor-pointer" />
+              <input type="range" min={1000} max={Math.max(maxMandat, 2000)} step={500} value={mandatM} onChange={e => setMandatM(+e.target.value)} className="w-full cursor-pointer" />
             </div>
           )}
 
@@ -305,11 +316,11 @@ export default function App() {
               {sel === "holding" && (
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="text-sm font-semibold text-text-secondary mb-2">🏛️ SASU</div>
+                    <div className="text-sm font-semibold text-text-secondary mb-2 flex items-center gap-1.5"><Landmark size={14} /> SASU</div>
                     {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-text-secondary mb-2">🏗️ Holding</div>
+                    <div className="text-sm font-semibold text-text-secondary mb-2 flex items-center gap-1.5"><Layers size={14} /> Holding</div>
                     {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
                   </div>
                 </div>
@@ -384,21 +395,24 @@ export default function App() {
             <div className="text-sm text-text-tertiary font-mono">{fmt(ca)} HT/an</div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
             {structs.map(st => {
               const d = getData(st.id);
               const showB = gm === "B" && !st.noB;
+              const Icon = STRUCT_ICONS[st.id];
               return (
-                <StructureCard
-                  key={st.id}
-                  struct={st}
-                  net={d.net}
-                  ret={d.ret}
-                  ca={d.dCA}
-                  isB={showB}
-                  selected={sel === st.id}
-                  onClick={() => openD(st.id)}
-                />
+                <div key={st.id} className="min-w-[180px] flex-1">
+                  <StructureCard
+                    struct={st}
+                    icon={Icon}
+                    net={d.net}
+                    ret={d.ret}
+                    ca={d.dCA}
+                    isB={showB}
+                    selected={sel === st.id}
+                    onClick={() => openD(st.id)}
+                  />
+                </div>
               );
             })}
           </div>
