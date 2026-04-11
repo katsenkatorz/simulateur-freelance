@@ -40,3 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .idea/
+
+# playwright mcp
+.playwright-mcp/
+
+# screenshots audit
+audit-*.png
+new-ui-*.png
