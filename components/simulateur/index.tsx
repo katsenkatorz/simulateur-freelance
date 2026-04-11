@@ -8,13 +8,13 @@ import {
 import {
   simMicro, simTNS_A, simTNS_B, simSASU_A, simSASU_B, simHolding,
   retInfo, mkTNS, mkSASU, mkMicro,
-  fmt, isLabel, MICRO_TAUX_LABEL,
+  fmt, MICRO_TAUX_LABEL,
 } from "@/lib/engine";
 import type { Sim, Line, CotisItem, RetResult, StructConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-import { Sidebar, MobileHeader } from "@/components/layout/sidebar";
-import { StructureCard } from "@/components/comparison/structure-card";
+import { Header } from "@/components/layout/header";
+import { Sidebar, MobileControls } from "@/components/layout/sidebar";
 import { SankeyOverview } from "@/components/comparison/sankey-overview";
 import { FlowTab } from "@/components/detail/flow-tab";
 import { simToSankey } from "@/lib/sankey";
@@ -96,7 +96,7 @@ function RetB({ info }: { info: RetResult }) {
   return (
     <div className="p-4 bg-bg-primary rounded-lg border border-border-subtle text-sm">
       <div className="text-text-secondary">
-        👴 Retraite — Pension : <strong className="text-text-primary font-mono">~{fmt(info.pen)}/mois</strong>
+        Retraite — Pension : <strong className="text-text-primary font-mono">~{fmt(info.pen)}/mois</strong>
         {" · "}Trimestres/an : <strong className={info.tr >= 4 ? "text-positive" : "text-tax"}>{info.tr}/4</strong>
       </div>
       <p className="text-[11px] text-text-tertiary mt-1">Carrière complète = 43 ans (172 trimestres)</p>
@@ -106,10 +106,10 @@ function RetB({ info }: { info: RetResult }) {
 
 function CapUsage({ type }: { type: string }) {
   const data: Record<string, { t: string; i: string[][] }> = {
-    eurl: { t: "Capital dans la société (EURL)", i: [["✅ Embaucher / Matériel", "Investissement productif"], ["✅ Dividendes futurs", "Soumis TNS > 10% capital"], ["⚠️ Bourse", "Risque requalification"]] },
-    sasu: { t: "Capital dans la société (SASU)", i: [["✅ Embaucher / Matériel", "Investissement productif"], ["✅ Dividendes futurs", "Flat tax 30% SANS cotisations"], ["⚠️ Bourse", "Change l'objet social"]] },
-    holding: { t: "Capital dans la société (Holding)", i: [["✅ Bourse / ETF", "Investir à l'IS"], ["✅ Crédit Lombard", "Emprunter sans vendre"], ["✅ SCI / Immobilier", "Via la holding"], ["✅ Prêt CCA", "Remboursement non imposé"], ["🔥 Levier fiscal", "IS 15-25% vs IR 30-45%"]] },
-    ei: { t: "Capital dans l'EI (IS)", i: [["✅ Matériel / Trésorerie", "Investissement"], ["⚠️ Patrimoine", "Séparé depuis 2022 mais pas de personnalité morale"]] },
+    eurl: { t: "Capital dans la société (EURL)", i: [["Embaucher / Matériel", "Investissement productif"], ["Dividendes futurs", "Soumis TNS > 10% capital"], ["Bourse", "Risque requalification"]] },
+    sasu: { t: "Capital dans la société (SASU)", i: [["Embaucher / Matériel", "Investissement productif"], ["Dividendes futurs", "Flat tax 30% SANS cotisations"], ["Bourse", "Change l'objet social"]] },
+    holding: { t: "Capital dans la société (Holding)", i: [["Bourse / ETF", "Investir à l'IS"], ["Crédit Lombard", "Emprunter sans vendre"], ["SCI / Immobilier", "Via la holding"], ["Prêt CCA", "Remboursement non imposé"], ["Levier fiscal", "IS 15-25% vs IR 30-45%"]] },
+    ei: { t: "Capital dans l'EI (IS)", i: [["Matériel / Trésorerie", "Investissement"], ["Patrimoine", "Séparé depuis 2022 mais pas de personnalité morale"]] },
   };
   const d = data[type];
   if (!d) return null;
@@ -119,38 +119,11 @@ function CapUsage({ type }: { type: string }) {
       <div className="space-y-1.5">
         {d.i.map((it, i) => (
           <div key={i} className="text-sm">
-            <strong className={it[0].startsWith("❌") ? "text-negative" : it[0].startsWith("⚠") ? "text-tax" : it[0].startsWith("🔥") ? "text-holding" : "text-text-primary"}>
-              {it[0]}
-            </strong>
+            <span className="text-text-primary font-medium">{it[0]}</span>
             <span className="text-text-tertiary">{" — " + it[1]}</span>
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function ToggleGroup({ options, value, onChange }: {
-  options: { v: string; l: string }[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="inline-flex bg-bg-primary rounded-lg p-0.5 border border-border-subtle">
-      {options.map(o => (
-        <button
-          key={o.v}
-          onClick={() => onChange(o.v)}
-          className={cn(
-            "px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200",
-            value === o.v
-              ? "bg-text-primary text-bg-primary shadow-sm"
-              : "text-text-tertiary hover:text-text-secondary"
-          )}
-        >
-          {o.l}
-        </button>
-      ))}
     </div>
   );
 }
@@ -210,215 +183,155 @@ export default function App() {
 
   const openD = (id: string) => { setSel(id); setTab("overview"); };
 
-  function renderDetail() {
-    const st = structs.find(s => s.id === sel)!;
-    if (!st) return null;
-    const isB = gm === "B" && !st.noB;
-    let sim: Sim, cotisItems: CotisItem[], retData: RetResult, regToggle: React.ReactNode = null;
+  const st = structs.find(s => s.id === sel)!;
+  const isB = gm === "B" && !st.noB;
 
-    if (sel === "micro") {
-      sim = S.micro; cotisItems = mkMicro(mCA); retData = retInfo("micro", sim.rev, 0);
-    } else if (sel === "ei") {
-      regToggle = <ToggleGroup options={[{ v: "IR", l: "IR" }, { v: "IS", l: "IS (depuis 2022)" }]} value={regEI} onChange={setRegEI} />;
-      sim = (eiCanB && isB && S.ei_B) ? S.ei_B : S.ei_A;
-      cotisItems = mkTNS(isB && eiCanB ? salB : sim.nr); retData = retInfo("tns", isB && eiCanB ? salB : sim.nr, 0);
-    } else if (sel === "eurl") {
-      regToggle = <ToggleGroup options={[{ v: "IR", l: "IR (transparent)" }, { v: "IS", l: "IS" }]} value={regEURL} onChange={setRegEURL} />;
-      sim = (eurlCanB && isB && S.eurl_B) ? S.eurl_B : S.eurl_A;
-      cotisItems = mkTNS(isB && eurlCanB ? salB : sim.nr); retData = retInfo("tns", isB && eurlCanB ? salB : sim.nr, 0);
-    } else if (sel === "sasu") {
-      regToggle = <ToggleGroup options={[{ v: "IR", l: "IR (5 ans max)" }, { v: "IS", l: "IS" }]} value={regSASU} onChange={setRegSASU} />;
-      sim = (sasuCanB && isB && S.sasu_B) ? S.sasu_B : S.sasu_A;
-      cotisItems = mkSASU(sim.brut || Math.round((isB && sasuCanB ? salB : sim.nAv || 20400) / SASU_COEFF_NET));
-      retData = retInfo("salarie", sim.nAv || salB, sim.brut);
-    } else {
-      sim = isB ? S.hold_B : S.hold_A;
-      cotisItems = mkTNS(isB ? salB : (sim.nr || salB)); retData = retInfo("tns", isB ? salB : (sim.nr || salB), 0);
-    }
-
-    const sankeyData = simToSankey(sim, sel, isB);
-
-    const tabItems = [
-      { k: "overview", l: "Synthèse" },
-      { k: "sankey", l: "Répartition" },
-      { k: "flow", l: "Flux détaillé" },
-      { k: "cotis", l: "Cotisations" },
-    ];
-    if (isB) tabItems.push({ k: "capital", l: "Capital" });
-
-    return (
-      <div className="border border-border-subtle rounded-xl overflow-hidden bg-bg-card">
-        <div className="px-4 md:px-6 pt-5 pb-0 border-b border-border-subtle">
-          <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-            <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
-              {(() => { const Icon = STRUCT_ICONS[st.id]; return Icon ? <Icon size={20} className="text-text-secondary" /> : null; })()}
-              {st.name}
-              <span className="text-sm text-text-tertiary font-normal ml-2">
-                Mode {st.noB ? "A" : gm}{!st.noB && gm === "B" && " · Capitalise"}
-              </span>
-            </h2>
-            {regToggle}
-          </div>
-
-          {sel === "holding" && (
-            <div className="pb-3">
-              <div className="flex justify-between items-baseline mb-1">
-                <span className="text-sm text-text-secondary">Rémun. mandat présidence</span>
-                <span className="text-base font-bold font-mono text-text-primary">
-                  {fmt(mandatM)}<span className="text-text-tertiary font-normal text-xs">/mois</span>
-                </span>
-              </div>
-              <input type="range" min={1000} max={Math.max(maxMandat, 2000)} step={500} value={mandatM} onChange={e => setMandatM(+e.target.value)} className="w-full cursor-pointer" />
-            </div>
-          )}
-
-          {isB && (
-            <div className="pb-3">
-              <div className="flex justify-between items-baseline mb-1">
-                <span className="text-sm text-text-secondary">Salaire net gérant</span>
-                <span className="text-base font-bold font-mono text-text-primary">
-                  {fmt(Math.round(salB / 12))}<span className="text-text-tertiary font-normal text-xs">/mois</span>
-                </span>
-              </div>
-              <input type="range" min={6000} max={maxSalB} step={1200} value={salB} onChange={e => setSalB(+e.target.value)} className="w-full cursor-pointer" />
-            </div>
-          )}
-
-          {!st.noB && gm === "B" && ((sel === "ei" && regEI === "IR") || (sel === "eurl" && regEURL === "IR") || (sel === "sasu" && regSASU === "IR")) && (
-            <div className="py-2 px-3 bg-tax/5 border border-tax/20 rounded-lg text-xs text-tax mb-3">
-              ⚠️ À l&apos;IR, pas de capitalisation — bénéfice imposé directement. Mode A forcé.
-            </div>
-          )}
-
-          {/* Tabs */}
-          <div className="flex gap-0 -mb-px">
-            {tabItems.map(t => (
-              <button
-                key={t.k}
-                onClick={() => setTab(t.k)}
-                className={cn(
-                  "px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer",
-                  tab === t.k
-                    ? "text-text-primary border-text-primary"
-                    : "text-text-tertiary border-transparent hover:text-text-secondary"
-                )}
-              >
-                {t.l}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-6">
-          {tab === "overview" && (
-            <div>
-              {sel === "holding" && (
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <div className="text-sm font-semibold text-text-secondary mb-2 flex items-center gap-1.5"><Landmark size={14} /> SASU</div>
-                    {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-text-secondary mb-2 flex items-center gap-1.5"><Layers size={14} /> Holding</div>
-                    {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                  </div>
-                </div>
-              )}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  {sim.lines.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                  <div className="flex justify-between py-3 border-t border-text-primary/20 mt-2 text-lg font-bold text-text-primary">
-                    <span>Net</span>
-                    <span className="font-mono">{fmt(sim.net)}</span>
-                  </div>
-                  {sim.ret > 0 && (
-                    <div className="flex justify-between py-2 text-sm font-bold text-positive">
-                      <span>Dans la société</span>
-                      <span className="font-mono">{fmt(sim.ret)}</span>
-                    </div>
-                  )}
-                </div>
-                <BarsViz
-                  items={[
-                    ["URSSAF", sim.co, "#f43f5e"],
-                    [sim.is ? "IS + IR" : "IR", (sim.is || 0) + sim.ir, "#f59e0b"],
-                    ["Net perso", sim.net, "#fafafa"],
-                    ...(sim.ret > 0 ? [["Capitalisé" as string, sim.ret as number, "#22c55e" as string] as [string, number, string]] : []),
-                  ]}
-                  mx={ca}
-                />
-              </div>
-            </div>
-          )}
-          {tab === "sankey" && <SankeyOverview data={sankeyData} accent={st.accent} />}
-          {tab === "flow" && (
-            <FlowTab
-              sel={sel}
-              sim={sim}
-              isB={isB}
-              accent={st.accent}
-              regEI={regEI}
-              regEURL={regEURL}
-              regSASU={regSASU}
-              eiCanB={eiCanB}
-              eurlCanB={eurlCanB}
-              sasuCanB={sasuCanB}
-            />
-          )}
-          {tab === "cotis" && (
-            <div className="space-y-4">
-              <CotisT items={cotisItems} />
-              <RetB info={retData} />
-            </div>
-          )}
-          {tab === "capital" && isB && <CapUsage type={sel === "holding" ? "holding" : sel} />}
-        </div>
-      </div>
-    );
+  // Compute current sim data
+  let sim: Sim, cotisItems: CotisItem[], retData: RetResult;
+  if (sel === "micro") {
+    sim = S.micro; cotisItems = mkMicro(mCA); retData = retInfo("micro", sim.rev, 0);
+  } else if (sel === "ei") {
+    sim = (eiCanB && isB && S.ei_B) ? S.ei_B : S.ei_A;
+    cotisItems = mkTNS(isB && eiCanB ? salB : sim.nr); retData = retInfo("tns", isB && eiCanB ? salB : sim.nr, 0);
+  } else if (sel === "eurl") {
+    sim = (eurlCanB && isB && S.eurl_B) ? S.eurl_B : S.eurl_A;
+    cotisItems = mkTNS(isB && eurlCanB ? salB : sim.nr); retData = retInfo("tns", isB && eurlCanB ? salB : sim.nr, 0);
+  } else if (sel === "sasu") {
+    sim = (sasuCanB && isB && S.sasu_B) ? S.sasu_B : S.sasu_A;
+    cotisItems = mkSASU(sim.brut || Math.round((isB && sasuCanB ? salB : sim.nAv || 20400) / SASU_COEFF_NET));
+    retData = retInfo("salarie", sim.nAv || salB, sim.brut);
+  } else {
+    sim = isB ? S.hold_B : S.hold_A;
+    cotisItems = mkTNS(isB ? salB : (sim.nr || salB)); retData = retInfo("tns", isB ? salB : (sim.nr || salB), 0);
   }
 
-  const sidebarProps = { ca, setCa, parts, setParts, gm, setGm, isSeuilEtendu, setIsSeuilEtendu, isCapped };
+  const sankeyData = simToSankey(sim, sel, isB);
+
+  const tabItems = [
+    { k: "overview", l: "Synthèse" },
+    { k: "sankey", l: "Répartition" },
+    { k: "flow", l: "Flux" },
+    { k: "cotis", l: "Cotisations" },
+  ];
+  if (isB) tabItems.push({ k: "capital", l: "Capital" });
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen">
-      <Sidebar {...sidebarProps} />
-      <MobileHeader {...sidebarProps} />
-      <main className="flex-1 p-4 md:p-6 lg:p-8 lg:pt-10 overflow-y-auto">
-        <div className="max-w-[1100px] mx-auto">
-          {/* Structure selector */}
-          <div className="flex items-center gap-1 p-1 bg-bg-card rounded-lg border border-border-subtle mb-6 overflow-x-auto scrollbar-none">
-            {structs.map(st => {
-              const d = getData(st.id);
-              const Icon = STRUCT_ICONS[st.id];
-              const isSelected = sel === st.id;
-              const showB = gm === "B" && !st.noB;
-              return (
+    <div className="flex flex-col min-h-screen">
+      <Header structs={structs} sel={sel} onSelect={openD} getData={getData} icons={STRUCT_ICONS} />
+
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar
+          ca={ca} setCa={setCa} parts={parts} setParts={setParts}
+          gm={gm} setGm={setGm} isSeuilEtendu={isSeuilEtendu} setIsSeuilEtendu={setIsSeuilEtendu}
+          isCapped={isCapped} sel={sel}
+          regEI={regEI} setRegEI={setRegEI} regEURL={regEURL} setRegEURL={setRegEURL}
+          regSASU={regSASU} setRegSASU={setRegSASU}
+          salB={salB} setSalB={setSalB} mandatM={mandatM} setMandatM={setMandatM}
+          maxSalB={maxSalB} maxMandat={maxMandat} isB={isB}
+        />
+
+        <MobileControls
+          ca={ca} setCa={setCa} parts={parts} setParts={setParts}
+          gm={gm} setGm={setGm} isSeuilEtendu={isSeuilEtendu} setIsSeuilEtendu={setIsSeuilEtendu}
+          isCapped={isCapped}
+        />
+
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+          <div className="max-w-[1000px] mx-auto">
+            {/* Summary bar */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                  {(() => { const Icon = STRUCT_ICONS[st.id]; return Icon ? <Icon size={20} className="text-text-secondary" /> : null; })()}
+                  {st.name}
+                  <span className="text-sm text-text-tertiary font-normal">
+                    Mode {st.noB ? "A" : gm}
+                  </span>
+                </h2>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold font-mono text-text-primary">{fmt(sim.net)}</div>
+                <div className="text-xs text-text-tertiary">{fmt(Math.round(sim.net / 12))}/mois</div>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-0 border-b border-border-subtle mb-6">
+              {tabItems.map(t => (
                 <button
-                  key={st.id}
-                  onClick={() => openD(st.id)}
+                  key={t.k}
+                  onClick={() => setTab(t.k)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap cursor-pointer min-w-0",
-                    isSelected
-                      ? "bg-bg-elevated text-text-primary shadow-sm"
-                      : "text-text-tertiary hover:text-text-secondary"
+                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer",
+                    tab === t.k
+                      ? "text-text-primary border-text-primary"
+                      : "text-text-tertiary border-transparent hover:text-text-secondary"
                   )}
                 >
-                  {Icon && <Icon size={15} className={isSelected ? "text-text-primary" : "text-text-tertiary"} />}
-                  <span className="font-semibold">{st.name}</span>
-                  <span className={cn("font-mono text-xs", isSelected ? "text-text-secondary" : "text-text-tertiary")}>
-                    {fmt(d.net)}
-                  </span>
-                  {showB && <span className="text-[9px] bg-text-primary/5 text-text-tertiary px-1 rounded">B</span>}
+                  {t.l}
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
 
-          {/* Detail panel */}
-          {renderDetail()}
-        </div>
-      </main>
+            {/* Content */}
+            {tab === "overview" && (
+              <div>
+                {sel === "holding" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <div className="text-sm font-semibold text-text-secondary mb-2 flex items-center gap-1.5"><Landmark size={14} /> SASU</div>
+                      {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-text-secondary mb-2 flex items-center gap-1.5"><Layers size={14} /> Holding</div>
+                      {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                    </div>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    {sim.lines.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                    <div className="flex justify-between py-3 border-t border-text-primary/20 mt-2 text-lg font-bold text-text-primary">
+                      <span>Net</span>
+                      <span className="font-mono">{fmt(sim.net)}</span>
+                    </div>
+                    {sim.ret > 0 && (
+                      <div className="flex justify-between py-2 text-sm font-bold text-positive">
+                        <span>Dans la société</span>
+                        <span className="font-mono">{fmt(sim.ret)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <BarsViz
+                    items={[
+                      ["URSSAF", sim.co, "#f43f5e"],
+                      [sim.is ? "IS + IR" : "IR", (sim.is || 0) + sim.ir, "#f59e0b"],
+                      ["Net perso", sim.net, "#fafafa"],
+                      ...(sim.ret > 0 ? [["Capitalisé" as string, sim.ret as number, "#22c55e" as string] as [string, number, string]] : []),
+                    ]}
+                    mx={ca}
+                  />
+                </div>
+              </div>
+            )}
+            {tab === "sankey" && <SankeyOverview data={sankeyData} accent={st.accent} />}
+            {tab === "flow" && (
+              <FlowTab
+                sel={sel} sim={sim} isB={isB} accent={st.accent}
+                regEI={regEI} regEURL={regEURL} regSASU={regSASU}
+                eiCanB={eiCanB} eurlCanB={eurlCanB} sasuCanB={sasuCanB}
+              />
+            )}
+            {tab === "cotis" && (
+              <div className="space-y-4">
+                <CotisT items={cotisItems} />
+                <RetB info={retData} />
+              </div>
+            )}
+            {tab === "capital" && isB && <CapUsage type={sel === "holding" ? "holding" : sel} />}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
