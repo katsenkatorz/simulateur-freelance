@@ -15,10 +15,9 @@ import { cn } from "@/lib/utils";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { StructureCard } from "@/components/comparison/structure-card";
-import { FlowSimple } from "@/components/flow/flow-simple";
-import { FlowSplit } from "@/components/flow/flow-split";
-import { FlowHoldingA } from "@/components/flow/flow-holding-a";
-import { FlowHoldingB } from "@/components/flow/flow-holding-b";
+import { SankeyOverview } from "@/components/comparison/sankey-overview";
+import { FlowTab } from "@/components/detail/flow-tab";
+import { simToSankey } from "@/lib/sankey";
 
 // --- Primitives UI ---
 function Bar({ v, mx, c }: { v: number; mx: number; c: string }) {
@@ -205,36 +204,34 @@ export default function App() {
     if (!sel) return null;
     const st = structs.find(s => s.id === sel)!;
     const isB = gm === "B" && !st.noB;
-    let sim: Sim, cotisItems: CotisItem[], retData: RetResult, flowEl: React.ReactNode, regToggle: React.ReactNode = null;
+    let sim: Sim, cotisItems: CotisItem[], retData: RetResult, regToggle: React.ReactNode = null;
 
     if (sel === "micro") {
       sim = S.micro; cotisItems = mkMicro(mCA); retData = retInfo("micro", sim.rev, 0);
-      flowEl = <FlowSimple sim={sim} accent="#60a5fa" icon="🧑‍💻" name="Micro" chargeLabel={MICRO_TAUX_LABEL} />;
     } else if (sel === "ei") {
       regToggle = <ToggleGroup options={[{ v: "IR", l: "IR" }, { v: "IS", l: "IS (depuis 2022)" }]} value={regEI} onChange={setRegEI} />;
       sim = (eiCanB && isB && S.ei_B) ? S.ei_B : S.ei_A;
       cotisItems = mkTNS(isB && eiCanB ? salB : sim.nr); retData = retInfo("tns", isB && eiCanB ? salB : sim.nr, 0);
-      flowEl = (eiCanB && isB) ? <FlowSplit sim={sim} accent="#2dd4bf" icon="📋" name="EI IS" capSub="Matériel · Trésorerie" /> : <FlowSimple sim={sim} accent="#2dd4bf" icon="📋" name={"EI " + regEI} chargeLabel="TNS ~43%" />;
     } else if (sel === "eurl") {
       regToggle = <ToggleGroup options={[{ v: "IR", l: "IR (transparent)" }, { v: "IS", l: "IS" }]} value={regEURL} onChange={setRegEURL} />;
       sim = (eurlCanB && isB && S.eurl_B) ? S.eurl_B : S.eurl_A;
       cotisItems = mkTNS(isB && eurlCanB ? salB : sim.nr); retData = retInfo("tns", isB && eurlCanB ? salB : sim.nr, 0);
-      flowEl = (eurlCanB && isB) ? <FlowSplit sim={sim} accent="#34d399" icon="🏢" name="EURL IS" capSub="Embauche · Matériel" /> : <FlowSimple sim={sim} accent="#34d399" icon="🏢" name={"EURL " + regEURL} chargeLabel="TNS ~43%" />;
     } else if (sel === "sasu") {
       regToggle = <ToggleGroup options={[{ v: "IR", l: "IR (5 ans max)" }, { v: "IS", l: "IS" }]} value={regSASU} onChange={setRegSASU} />;
       sim = (sasuCanB && isB && S.sasu_B) ? S.sasu_B : S.sasu_A;
       cotisItems = mkSASU(sim.brut || Math.round((isB && sasuCanB ? salB : sim.nAv || 20400) / SASU_COEFF_NET));
       retData = retInfo("salarie", sim.nAv || salB, sim.brut);
-      flowEl = (sasuCanB && isB) ? <FlowSplit sim={{ ...sim, cotisOnly: sim.co - CHARGES_FIXES_SOCIETE }} accent="#a78bfa" icon="🏛️" name="SASU IS" capSub="Div. flat tax 30%" /> : <FlowSimple sim={sim} accent="#a78bfa" icon="🏛️" name={"SASU " + regSASU} chargeLabel="~77% du brut" />;
     } else {
       sim = isB ? S.hold_B : S.hold_A;
       cotisItems = mkTNS(isB ? salB : (sim.nr || salB)); retData = retInfo("tns", isB ? salB : (sim.nr || salB), 0);
-      flowEl = isB ? <FlowHoldingB sim={sim} /> : <FlowHoldingA sim={sim} />;
     }
+
+    const sankeyData = simToSankey(sim, sel, isB);
 
     const tabItems = [
       { k: "overview", l: "Synthèse" },
-      { k: "flow", l: "Flux" },
+      { k: "sankey", l: "Répartition" },
+      { k: "flow", l: "Flux détaillé" },
       { k: "cotis", l: "Cotisations" },
     ];
     if (isB) tabItems.push({ k: "capital", l: "Capital" });
@@ -344,7 +341,21 @@ export default function App() {
               </div>
             </div>
           )}
-          {tab === "flow" && flowEl}
+          {tab === "sankey" && <SankeyOverview data={sankeyData} accent={st.accent} />}
+          {tab === "flow" && (
+            <FlowTab
+              sel={sel}
+              sim={sim}
+              isB={isB}
+              accent={st.accent}
+              regEI={regEI}
+              regEURL={regEURL}
+              regSASU={regSASU}
+              eiCanB={eiCanB}
+              eurlCanB={eurlCanB}
+              sasuCanB={sasuCanB}
+            />
+          )}
           {tab === "cotis" && (
             <div className="space-y-4">
               <CotisT items={cotisItems} accent={st.accent} />
