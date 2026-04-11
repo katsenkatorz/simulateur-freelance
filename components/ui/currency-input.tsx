@@ -52,7 +52,7 @@ export function CurrencyInput({ value, onChange, min = 0, max = 1_000_000, label
           className={cn(
             "w-full bg-bg-primary border border-border-default rounded-lg",
             "px-4 py-3 text-right text-2xl font-bold font-mono text-text-primary",
-            "focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent",
+            "focus:outline-none focus:ring-1 focus:ring-text-primary/30 focus:border-text-primary/30",
             "transition-all duration-200"
           )}
         />
@@ -69,7 +69,7 @@ export function CurrencyInput({ value, onChange, min = 0, max = 1_000_000, label
               "flex-1 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
               "border",
               value === p
-                ? "bg-accent text-white border-accent"
+                ? "bg-text-primary text-bg-primary border-text-primary"
                 : "bg-transparent text-text-tertiary border-border-subtle hover:border-border-default hover:text-text-secondary"
             )}
           >

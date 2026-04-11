@@ -13,7 +13,7 @@ import {
 import type { Sim, Line, CotisItem, RetResult, StructConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-import { Sidebar } from "@/components/layout/sidebar";
+import { Sidebar, MobileHeader } from "@/components/layout/sidebar";
 import { StructureCard } from "@/components/comparison/structure-card";
 import { SankeyOverview } from "@/components/comparison/sankey-overview";
 import { FlowTab } from "@/components/detail/flow-tab";
@@ -134,7 +134,7 @@ function ToggleGroup({ options, value, onChange }: {
           className={cn(
             "px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200",
             value === o.v
-              ? "bg-accent text-white shadow-sm"
+              ? "bg-text-primary text-bg-primary shadow-sm"
               : "text-text-tertiary hover:text-text-secondary"
           )}
         >
@@ -237,12 +237,11 @@ export default function App() {
     if (isB) tabItems.push({ k: "capital", l: "Capital" });
 
     return (
-      <div className="mt-6 border border-border-default rounded-xl overflow-hidden bg-bg-card">
-        {/* Header */}
-        <div className="px-6 pt-5 pb-0 border-b border-border-subtle" style={{ borderBottomColor: st.accent + "30" }}>
+      <div className="mt-6 border border-border-subtle rounded-xl overflow-hidden bg-bg-card">
+        <div className="px-4 md:px-6 pt-5 pb-0 border-b border-border-subtle">
           <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
             <h2 className="text-xl font-bold text-text-primary">
-              <span style={{ color: st.accent }}>{st.icon} {st.name}</span>
+              {st.icon} {st.name}
               <span className="text-sm text-text-tertiary font-normal ml-2">
                 Mode {st.noB ? "A" : gm}{!st.noB && gm === "B" && " · Capitalise"}
               </span>
@@ -287,9 +286,9 @@ export default function App() {
                 key={t.k}
                 onClick={() => setTab(t.k)}
                 className={cn(
-                  "px-5 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer",
+                  "px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer",
                   tab === t.k
-                    ? "text-text-primary border-accent"
+                    ? "text-text-primary border-text-primary"
                     : "text-text-tertiary border-transparent hover:text-text-secondary"
                 )}
               >
@@ -318,7 +317,7 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   {sim.lines.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                  <div className="flex justify-between py-3 border-t-2 mt-2 text-lg font-bold" style={{ borderColor: st.accent, color: st.accent }}>
+                  <div className="flex justify-between py-3 border-t border-text-primary/20 mt-2 text-lg font-bold text-text-primary">
                     <span>Net</span>
                     <span className="font-mono">{fmt(sim.net)}</span>
                   </div>
@@ -333,7 +332,7 @@ export default function App() {
                   items={[
                     ["URSSAF", sim.co, "#f43f5e"],
                     [sim.is ? "IS + IR" : "IR", (sim.is || 0) + sim.ir, "#f59e0b"],
-                    ["Net perso", sim.net, st.accent],
+                    ["Net perso", sim.net, "#fafafa"],
                     ...(sim.ret > 0 ? [["Capitalisé" as string, sim.ret as number, "#22c55e" as string] as [string, number, string]] : []),
                   ]}
                   mx={ca}
@@ -368,19 +367,15 @@ export default function App() {
     );
   }
 
+  const sidebarProps = { ca, setCa, parts, setParts, gm, setGm, isSeuilEtendu, setIsSeuilEtendu, isCapped };
+
   return (
-    <div className="flex min-h-screen">
-      <Sidebar
-        ca={ca} setCa={setCa}
-        parts={parts} setParts={setParts}
-        gm={gm} setGm={setGm}
-        isSeuilEtendu={isSeuilEtendu} setIsSeuilEtendu={setIsSeuilEtendu}
-        isCapped={isCapped}
-      />
-      <main className="flex-1 p-8 overflow-y-auto">
+    <div className="flex flex-col lg:flex-row min-h-screen">
+      <Sidebar {...sidebarProps} />
+      <MobileHeader {...sidebarProps} />
+      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-[1100px] mx-auto">
-          {/* Comparison cards */}
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {structs.map(st => {
               const d = getData(st.id);
               const showB = gm === "B" && !st.noB;

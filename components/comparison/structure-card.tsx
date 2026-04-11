@@ -22,18 +22,20 @@ export function StructureCard({ struct, net, ret, ca, isB, selected, onClick }: 
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left rounded-xl border p-4 transition-all duration-200 cursor-pointer group",
+        "w-full text-left rounded-xl border p-4 transition-all duration-200 cursor-pointer",
         selected
-          ? "border-accent bg-accent/5"
-          : "border-border-subtle bg-bg-card hover:border-border-default hover:bg-bg-elevated"
+          ? "border-text-primary/20 bg-bg-elevated"
+          : "border-border-subtle bg-bg-card hover:border-border-default"
       )}
     >
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg">{struct.icon}</span>
-        <span className="text-sm font-semibold" style={{ color: struct.accent }}>{struct.name}</span>
+        <span className={cn("text-sm font-semibold", selected ? "text-text-primary" : "text-text-secondary")}>
+          {struct.name}
+        </span>
         {isB && (
-          <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded bg-tax/10 text-tax">
-            MODE B
+          <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded bg-text-primary/5 text-text-secondary">
+            B
           </span>
         )}
       </div>
@@ -46,7 +48,7 @@ export function StructureCard({ struct, net, ret, ca, isB, selected, onClick }: 
       </div>
 
       <div className="flex items-baseline gap-1 mb-3">
-        <span className="font-mono text-sm font-semibold" style={{ color: struct.accent }}>
+        <span className={cn("font-mono text-sm font-semibold", selected ? "text-text-primary" : "text-text-secondary")}>
           {fmt(Math.round(net / 12))}
         </span>
         <span className="text-[11px] text-text-tertiary">/mois</span>
@@ -60,13 +62,13 @@ export function StructureCard({ struct, net, ret, ca, isB, selected, onClick }: 
       )}
 
       {/* Bar */}
-      <div className="w-full h-1.5 bg-bg-primary rounded-full overflow-hidden mb-1">
+      <div className="w-full h-1 bg-bg-primary rounded-full overflow-hidden mb-1">
         <div
           className="h-full rounded-full transition-all duration-500"
-          style={{ width: pct + "%", background: struct.accent }}
+          style={{ width: pct + "%", background: selected ? struct.accent : "#52525b" }}
         />
       </div>
-      <div className="text-[10px] text-text-tertiary">{pct}% conservé</div>
+      <div className="text-[10px] text-text-tertiary">{pct}%</div>
     </button>
   );
 }

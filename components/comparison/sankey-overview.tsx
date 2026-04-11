@@ -14,7 +14,7 @@ export function SankeyOverview({ data, accent }: SankeyOverviewProps) {
     <div className="h-[280px] w-full">
       <ResponsiveSankey
         data={data}
-        margin={{ top: 20, right: 140, bottom: 20, left: 20 }}
+        margin={{ top: 20, right: 140, bottom: 20, left: 50 }}
         align="justify"
         colors={(node: Record<string, unknown>) => (node.color as string) || accent}
         nodeOpacity={1}
