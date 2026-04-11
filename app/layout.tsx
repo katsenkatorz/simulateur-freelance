@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono, Inter, Geist } from "next/font/google";
+import { JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
@@ -33,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={cn(jetbrains.variable, inter.variable, "font-sans", geist.variable)}
+      className={cn(jetbrains.variable, inter.variable)}
     >
       <body>{children}</body>
     </html>
