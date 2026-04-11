@@ -96,37 +96,41 @@ function StatusDot({ status }: { status: string }) {
   return <span className="inline-block w-2 h-2 rounded-full bg-text-tertiary" title="Variable" />;
 }
 
-function CotisT({ items }: { items: CotisItem[] }) {
+function CotisInner({ items }: { items: CotisItem[] }) {
   return (
-    <div className="p-4 bg-bg-primary rounded-lg border border-border-subtle">
-      <div className="text-sm font-semibold mb-3 text-text-primary">Cotisations détaillées</div>
-      <table className="w-full text-sm">
-        <tbody>
-          {items.map((it, i) => (
-            <tr key={i} className="border-b border-border-subtle last:border-0">
-              <td className="py-2.5 text-text-secondary">{stripEmoji(it.n)}</td>
-              <td className={cn("py-2.5 font-mono font-medium text-right w-24", it.a > 0 ? "text-text-primary" : "text-text-tertiary")}>
-                {it.a > 0 ? fmt(it.a) : "—"}
-              </td>
-              <td className="py-2.5 text-center w-8">
-                <StatusDot status={it.c} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <table className="w-full text-sm">
+      <tbody>
+        {items.map((it, i) => (
+          <tr key={i} className="border-b border-border-subtle last:border-0">
+            <td className="py-2.5 text-text-secondary">{stripEmoji(it.n)}</td>
+            <td className={cn("py-2.5 font-mono font-medium text-right w-24", it.a > 0 ? "text-text-primary" : "text-text-tertiary")}>
+              {it.a > 0 ? fmt(it.a) : "—"}
+            </td>
+            <td className="py-2.5 text-center w-8">
+              <StatusDot status={it.c} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
-function RetB({ info }: { info: RetResult }) {
+function RetInner({ info }: { info: RetResult }) {
   return (
-    <div className="p-4 bg-bg-primary rounded-lg border border-border-subtle text-sm">
-      <div className="text-text-secondary">
-        Retraite — Pension : <strong className="text-text-primary font-mono">~{fmt(info.pen)}/mois</strong>
-        {" · "}Trimestres/an : <strong className={info.tr >= 4 ? "text-positive" : "text-tax"}>{info.tr}/4</strong>
+    <div className="space-y-3 text-sm">
+      <div className="flex justify-between text-text-secondary">
+        <span>Pension mensuelle estimée</span>
+        <span className="font-mono font-medium text-text-primary">~{fmt(info.pen)}/mois</span>
       </div>
-      <p className="text-[11px] text-text-tertiary mt-1">Carrière complète = 43 ans (172 trimestres)</p>
+      <div className="flex justify-between text-text-secondary">
+        <span>Trimestres validés par an</span>
+        <span className="font-mono font-medium text-text-primary">{info.tr}/4</span>
+      </div>
+      <div className="flex justify-between text-text-secondary">
+        <span>Carrière complète</span>
+        <span className="text-text-tertiary">43 ans (172 trimestres, né(e) après 1973)</span>
+      </div>
     </div>
   );
 }
@@ -271,20 +275,17 @@ export default function App() {
 
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
           <div className="max-w-[1000px] mx-auto">
-            {/* Summary bar */}
+            {/* Header */}
             <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
-                  {(() => { const Icon = STRUCT_ICONS[st.id]; return Icon ? <Icon size={20} className="text-text-secondary" /> : null; })()}
-                  {st.name}
-                  <span className="text-sm text-text-tertiary font-normal">
-                    Mode {st.noB ? "A" : gm}
-                  </span>
-                </h2>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold font-mono text-text-primary">{fmt(sim.net)}</div>
-                <div className="text-xs text-text-tertiary">{fmt(Math.round(sim.net / 12))}/mois</div>
+              <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                {(() => { const Icon = STRUCT_ICONS[st.id]; return Icon ? <Icon size={18} className="text-text-tertiary" /> : null; })()}
+                {st.name}
+                <span className="text-sm text-text-tertiary font-normal">
+                  · Mode {st.noB ? "A" : gm}
+                </span>
+              </h2>
+              <div className="text-sm font-mono text-text-secondary">
+                {fmt(sim.net)}<span className="text-text-tertiary"> /an</span>
               </div>
             </div>
 
@@ -307,59 +308,104 @@ export default function App() {
             </div>
 
             {/* Content */}
-            {tab === "overview" && (
-              <div className="space-y-4">
-                {/* Résumé principal — le seul endroit avec de la couleur */}
-                <div className="border border-border-subtle rounded-lg p-5">
-                  <div className="flex items-baseline justify-between mb-4">
-                    <span className="text-sm text-text-secondary">Revenu net après impôt</span>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold font-mono text-text-primary">{fmt(sim.net)}</div>
-                      <div className="text-sm text-text-tertiary font-mono">{fmt(Math.round(sim.net / 12))} /mois</div>
+            {tab === "overview" && (() => {
+              const pCo = ca > 0 ? Math.round(sim.co / ca * 100) : 0;
+              const pIr = ca > 0 ? Math.round(((sim.is || 0) + sim.ir) / ca * 100) : 0;
+              const pNet = ca > 0 ? Math.round(sim.net / ca * 100) : 0;
+              const pRet = ca > 0 && sim.ret > 0 ? Math.round(sim.ret / ca * 100) : 0;
+              const totalCharges = sim.co + (sim.is || 0) + sim.ir;
+
+              return (
+                <div className="space-y-4">
+                  {/* Résumé chiffré */}
+                  <div className="border border-border-subtle rounded-lg p-5">
+                    {/* Ligne CA */}
+                    <div className="flex justify-between text-sm text-text-secondary pb-3 border-b border-border-subtle">
+                      <span>Chiffre d&apos;affaires HT</span>
+                      <span className="font-mono">{fmt(ca)}</span>
+                    </div>
+
+                    {/* Montant net */}
+                    <div className="flex items-baseline justify-between py-4">
+                      <span className="text-sm text-text-secondary">Revenu net après impôt</span>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold font-mono text-text-primary">{fmt(sim.net)}</div>
+                        <div className="text-sm text-text-tertiary font-mono">{fmt(Math.round(sim.net / 12))} /mois</div>
+                      </div>
+                    </div>
+
+                    {sim.ret > 0 && (
+                      <div className="flex items-baseline justify-between py-3 border-t border-border-subtle">
+                        <span className="text-sm text-text-secondary">Capital conservé en société</span>
+                        <div className="text-lg font-bold font-mono text-positive">{fmt(sim.ret)}</div>
+                      </div>
+                    )}
+
+                    {/* Barre de répartition */}
+                    <div className="mt-4 space-y-2">
+                      <div className="flex h-3 rounded-full overflow-hidden bg-bg-elevated gap-px">
+                        <div style={{ width: pCo + "%" }} className="bg-zinc-500 rounded-l-full transition-all duration-500" />
+                        <div style={{ width: pIr + "%" }} className="bg-zinc-600 transition-all duration-500" />
+                        <div style={{ width: pNet + "%" }} className="bg-text-primary transition-all duration-500" />
+                        {pRet > 0 && <div style={{ width: pRet + "%" }} className="bg-positive/70 rounded-r-full transition-all duration-500" />}
+                      </div>
+
+                      {/* Légende */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-sm bg-zinc-500 shrink-0" />
+                          <span className="text-text-tertiary">Cotisations</span>
+                          <span className="font-mono text-text-secondary ml-auto">{pCo}%</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-sm bg-zinc-600 shrink-0" />
+                          <span className="text-text-tertiary">Impôts</span>
+                          <span className="font-mono text-text-secondary ml-auto">{pIr}%</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-sm bg-text-primary shrink-0" />
+                          <span className="text-text-tertiary">Net</span>
+                          <span className="font-mono text-text-secondary ml-auto">{pNet}%</span>
+                        </div>
+                        {pRet > 0 && (
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-sm bg-positive/70 shrink-0" />
+                            <span className="text-text-tertiary">Capital</span>
+                            <span className="font-mono text-text-secondary ml-auto">{pRet}%</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  {sim.ret > 0 && (
-                    <div className="flex items-baseline justify-between pt-3 border-t border-border-subtle">
-                      <span className="text-sm text-text-secondary">Capital conservé en société</span>
-                      <div className="text-lg font-bold font-mono text-positive">{fmt(sim.ret)}</div>
-                    </div>
+
+                  {/* Sections collapsibles */}
+                  {sel === "holding" && (
+                    <>
+                      <Section title="SASU opérationnelle">
+                        {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                      </Section>
+                      <Section title="Holding">
+                        {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                      </Section>
+                    </>
                   )}
-                  {/* Barre de répartition simple */}
-                  <div className="mt-4 flex h-2 rounded-full overflow-hidden bg-bg-elevated">
-                    <div style={{ width: (ca > 0 ? sim.co / ca * 100 : 0) + "%" }} className="bg-text-tertiary" title="Cotisations" />
-                    <div style={{ width: (ca > 0 ? ((sim.is || 0) + sim.ir) / ca * 100 : 0) + "%" }} className="bg-text-tertiary/60" title="Impôts" />
-                    <div style={{ width: (ca > 0 ? sim.net / ca * 100 : 0) + "%" }} className="bg-text-primary" title="Net" />
-                    {sim.ret > 0 && <div style={{ width: (ca > 0 ? sim.ret / ca * 100 : 0) + "%" }} className="bg-positive/60" title="Capital" />}
-                  </div>
-                  <div className="flex justify-between text-[10px] text-text-tertiary mt-1.5">
-                    <span>Cotisations {ca > 0 ? Math.round(sim.co / ca * 100) : 0}%</span>
-                    <span>Impôts {ca > 0 ? Math.round(((sim.is || 0) + sim.ir) / ca * 100) : 0}%</span>
-                    <span>Net {ca > 0 ? Math.round(sim.net / ca * 100) : 0}%</span>
-                    {sim.ret > 0 && <span>Capital {ca > 0 ? Math.round(sim.ret / ca * 100) : 0}%</span>}
+
+                  <Section title="Détail du calcul">
+                    {sim.lines.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                    <div className="flex justify-between pt-3 mt-1 border-t border-border-subtle text-sm font-bold text-text-primary">
+                      <span>Net après impôt</span>
+                      <span className="font-mono">{fmt(sim.net)}</span>
+                    </div>
+                  </Section>
+
+                  {/* Résumé compact en bas */}
+                  <div className="flex justify-between text-xs text-text-tertiary px-1">
+                    <span>Total prélevé : {fmt(totalCharges)} ({ca > 0 ? Math.round(totalCharges / ca * 100) : 0}% du CA)</span>
+                    <span>Conservé : {fmt(sim.net + (sim.ret || 0))} ({ca > 0 ? Math.round((sim.net + (sim.ret || 0)) / ca * 100) : 0}%)</span>
                   </div>
                 </div>
-
-                {/* Détail — sections collapsibles */}
-                {sel === "holding" && (
-                  <>
-                    <Section title="SASU opérationnelle">
-                      {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                    </Section>
-                    <Section title="Holding">
-                      {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                    </Section>
-                  </>
-                )}
-
-                <Section title="Détail du calcul">
-                  {sim.lines.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                  <div className="flex justify-between pt-3 mt-1 border-t border-border-subtle text-sm font-bold text-text-primary">
-                    <span>Net après impôt</span>
-                    <span className="font-mono">{fmt(sim.net)}</span>
-                  </div>
-                </Section>
-              </div>
-            )}
+              );
+            })()}
             {tab === "sankey" && <SankeyOverview data={sankeyData} accent={st.accent} />}
             {tab === "flow" && (
               <FlowTab
@@ -371,21 +417,25 @@ export default function App() {
             {tab === "cotis" && (
               <div className="space-y-4">
                 {/* Résumé cotisations */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
-                    <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">Total cotisations</div>
-                    <div className="text-lg font-bold font-mono text-negative">{fmt(cotisItems.reduce((s, c) => s + c.a, 0))}</div>
+                <div className="border border-border-subtle rounded-lg p-5">
+                  <div className="flex justify-between items-baseline pb-3 border-b border-border-subtle">
+                    <span className="text-sm text-text-secondary">Total cotisations sociales</span>
+                    <span className="text-2xl font-bold font-mono text-text-primary">{fmt(cotisItems.reduce((s, c) => s + c.a, 0))}</span>
                   </div>
-                  <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
-                    <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">Retraite estimée</div>
-                    <div className="text-lg font-bold font-mono text-text-primary">~{fmt(retData.pen)}/mois</div>
-                    <div className="text-[11px]">
-                      <span className={retData.tr >= 4 ? "text-positive" : "text-tax"}>{retData.tr}/4 trimestres</span>
+                  <div className="flex justify-between items-baseline pt-3">
+                    <span className="text-sm text-text-secondary">Retraite estimée</span>
+                    <div className="text-right">
+                      <span className="text-lg font-bold font-mono text-text-primary">~{fmt(retData.pen)}/mois</span>
+                      <div className="text-[11px] text-text-tertiary">{retData.tr}/4 trimestres validés/an</div>
                     </div>
                   </div>
                 </div>
-                <CotisT items={cotisItems} />
-                <RetB info={retData} />
+                <Section title="Détail des cotisations">
+                  <CotisInner items={cotisItems} />
+                </Section>
+                <Section title="Retraite" defaultOpen={false}>
+                  <RetInner info={retData} />
+                </Section>
               </div>
             )}
             {tab === "capital" && isB && <CapUsage type={sel === "holding" ? "holding" : sel} />}
