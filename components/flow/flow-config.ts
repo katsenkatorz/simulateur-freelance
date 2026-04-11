@@ -8,9 +8,9 @@ type FNode = Node<{ label: string; amount: number; sub?: string; color: string; 
 type FEdge = Edge<{ label?: string; color: string }, "flowEdge">;
 
 const CX = 300; // center X
-const COL_L = 80; // left column X
-const COL_R = 520; // right column X
-const ROW_H = 100; // row height
+const COL_L = 60; // left column X
+const COL_R = 540; // right column X
+const ROW_H = 110; // row height
 
 function n(id: string, x: number, y: number, label: string, amount: number, color: string, sub?: string, icon?: string): FNode {
   return {
@@ -37,10 +37,10 @@ function e(id: string, source: string, target: string, color: string, label?: st
 export function buildFlowSimple(sim: Sim, accent: string, icon: string, name: string, chargeLabel: string): { nodes: FNode[]; edges: FEdge[] } {
   return {
     nodes: [
-      n("client", CX, 0, "Client", sim.ca, "#71717a", undefined, "👤"),
+      n("client", CX, 0, "Client", sim.ca, "#71717a", undefined, undefined),
       n("entity", CX, ROW_H, name, sim.ca, accent, undefined, icon),
-      n("urssaf", CX, ROW_H * 2, "URSSAF", sim.co, "#f43f5e", chargeLabel, "📋"),
-      n("you", CX, ROW_H * 3, "Vous", sim.net, accent, fmt(Math.round(sim.net / 12)) + "/mois", "👤"),
+      n("urssaf", CX, ROW_H * 2, "URSSAF", sim.co, "#f43f5e", chargeLabel, undefined),
+      n("you", CX, ROW_H * 3, "Vous", sim.net, accent, fmt(Math.round(sim.net / 12)) + "/mois", undefined),
     ],
     edges: [
       e("e1", "client", "entity", accent, "CA"),
@@ -53,12 +53,12 @@ export function buildFlowSimple(sim: Sim, accent: string, icon: string, name: st
 export function buildFlowSplit(sim: Sim, accent: string, icon: string, name: string, capSub: string): { nodes: FNode[]; edges: FEdge[] } {
   return {
     nodes: [
-      n("client", CX, 0, "Client", sim.ca, "#71717a", undefined, "👤"),
+      n("client", CX, 0, "Client", sim.ca, "#71717a", undefined, undefined),
       n("entity", CX, ROW_H, name, sim.ca - CHARGES_FIXES_SOCIETE, accent, "après charges", icon),
-      n("urssaf", COL_L, ROW_H * 2.2, "URSSAF", sim.cotisOnly || sim.co - CHARGES_FIXES_SOCIETE, "#f43f5e", undefined, "📋"),
-      n("you", COL_L, ROW_H * 3.2, "Vous", sim.net, accent, fmt(Math.round(sim.net / 12)) + "/mois", "👤"),
-      n("is", COL_R, ROW_H * 2.2, "IS", sim.is || 0, "#f59e0b", sim.isD ? isLabel(sim.isD) : undefined, "🏛️"),
-      n("capital", COL_R, ROW_H * 3.2, "Capital", sim.ret, "#22c55e", capSub, "💰"),
+      n("urssaf", COL_L, ROW_H * 2.2, "URSSAF", sim.cotisOnly || sim.co - CHARGES_FIXES_SOCIETE, "#f43f5e", undefined, undefined),
+      n("you", COL_L, ROW_H * 3.2, "Vous", sim.net, accent, fmt(Math.round(sim.net / 12)) + "/mois", undefined),
+      n("is", COL_R, ROW_H * 2.2, "IS", sim.is || 0, "#f59e0b", sim.isD ? isLabel(sim.isD) : undefined, undefined),
+      n("capital", COL_R, ROW_H * 3.2, "Capital", sim.ret, "#22c55e", capSub, undefined),
     ],
     edges: [
       e("e1", "client", "entity", accent),
@@ -73,13 +73,13 @@ export function buildFlowSplit(sim: Sim, accent: string, icon: string, name: str
 export function buildFlowHoldingA(sim: Sim): { nodes: FNode[]; edges: FEdge[] } {
   return {
     nodes: [
-      n("client", CX, 0, "Client", sim.ca, "#71717a", undefined, "👤"),
-      n("sasu", CX, ROW_H, "SASU", sim.ca, "#a78bfa", "opérationnelle", "🏛️"),
-      n("is_sasu", COL_R, ROW_H * 2, "IS SASU", sim.isSASU.total, "#f59e0b", isLabel(sim.isSASU), "🏛️"),
-      n("dividendes", COL_R, ROW_H * 3, "Dividendes", sim.divBrut, "#22c55e", "95% exonéré IS", "📊"),
-      n("holding", CX, ROW_H * 4, "Holding", sim.dispo, "#fbbf24", "mandat + div.", "🏗️"),
-      n("urssaf", CX, ROW_H * 5, "URSSAF TNS", sim.co, "#f43f5e", "~43%", "📋"),
-      n("you", CX, ROW_H * 6, "Vous", sim.net, "#fbbf24", fmt(Math.round(sim.net / 12)) + "/mois", "👤"),
+      n("client", CX, 0, "Client", sim.ca, "#71717a", undefined, undefined),
+      n("sasu", CX, ROW_H, "SASU", sim.ca, "#a78bfa", "opérationnelle", undefined),
+      n("is_sasu", COL_R, ROW_H * 2, "IS SASU", sim.isSASU.total, "#f59e0b", isLabel(sim.isSASU), undefined),
+      n("dividendes", COL_R, ROW_H * 3, "Dividendes", sim.divBrut, "#22c55e", "95% exonéré IS", undefined),
+      n("holding", CX, ROW_H * 4, "Holding", sim.dispo, "#fbbf24", "mandat + div.", undefined),
+      n("urssaf", CX, ROW_H * 5, "URSSAF TNS", sim.co, "#f43f5e", "~43%", undefined),
+      n("you", CX, ROW_H * 6, "Vous", sim.net, "#fbbf24", fmt(Math.round(sim.net / 12)) + "/mois", undefined),
     ],
     edges: [
       e("e1", "client", "sasu", "#a78bfa", "CA"),
@@ -96,15 +96,15 @@ export function buildFlowHoldingA(sim: Sim): { nodes: FNode[]; edges: FEdge[] } 
 export function buildFlowHoldingB(sim: Sim): { nodes: FNode[]; edges: FEdge[] } {
   return {
     nodes: [
-      n("client", CX, 0, "Client", sim.ca, "#71717a", undefined, "👤"),
-      n("sasu", CX, ROW_H, "SASU", sim.ca, "#a78bfa", "opérationnelle", "🏛️"),
-      n("is_sasu", COL_R, ROW_H * 2, "IS SASU", sim.isSASU.total, "#f59e0b", isLabel(sim.isSASU), "🏛️"),
-      n("dividendes", COL_R, ROW_H * 3, "Dividendes", sim.divBrut, "#22c55e", "95% exonéré", "📊"),
-      n("holding", CX, ROW_H * 4, "Holding", sim.dispo, "#fbbf24", "mandat + div.", "🏗️"),
-      n("urssaf", COL_L, ROW_H * 5.2, "URSSAF TNS", sim.co, "#f43f5e", "~43%", "📋"),
-      n("you", COL_L, ROW_H * 6.2, "Vous", sim.net, "#fbbf24", fmt(Math.round(sim.net / 12)) + "/mois", "👤"),
-      n("is_hold", COL_R, ROW_H * 5.2, "IS Holding", sim.is || 0, "#f59e0b", sim.isH ? isLabel(sim.isH) : undefined, "🏛️"),
-      n("capital", COL_R, ROW_H * 6.2, "Capital", sim.ret, "#22c55e", "Bourse · SCI · Lombard", "📈"),
+      n("client", CX, 0, "Client", sim.ca, "#71717a", undefined, undefined),
+      n("sasu", CX, ROW_H, "SASU", sim.ca, "#a78bfa", "opérationnelle", undefined),
+      n("is_sasu", COL_R, ROW_H * 2, "IS SASU", sim.isSASU.total, "#f59e0b", isLabel(sim.isSASU), undefined),
+      n("dividendes", COL_R, ROW_H * 3, "Dividendes", sim.divBrut, "#22c55e", "95% exonéré", undefined),
+      n("holding", CX, ROW_H * 4, "Holding", sim.dispo, "#fbbf24", "mandat + div.", undefined),
+      n("urssaf", COL_L, ROW_H * 5.2, "URSSAF TNS", sim.co, "#f43f5e", "~43%", undefined),
+      n("you", COL_L, ROW_H * 6.2, "Vous", sim.net, "#fbbf24", fmt(Math.round(sim.net / 12)) + "/mois", undefined),
+      n("is_hold", COL_R, ROW_H * 5.2, "IS Holding", sim.is || 0, "#f59e0b", sim.isH ? isLabel(sim.isH) : undefined, undefined),
+      n("capital", COL_R, ROW_H * 6.2, "Capital", sim.ret, "#22c55e", "Bourse · SCI · Lombard", undefined),
     ],
     edges: [
       e("e1", "client", "sasu", "#a78bfa"),

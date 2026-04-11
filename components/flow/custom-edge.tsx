@@ -1,6 +1,6 @@
 "use client";
 
-import { BaseEdge, getSmoothStepPath, type EdgeProps, type Edge } from "@xyflow/react";
+import { getSmoothStepPath, type EdgeProps, type Edge } from "@xyflow/react";
 
 type FlowEdgeData = {
   label?: string;
@@ -10,7 +10,7 @@ type FlowEdgeData = {
 type FlowEdgeType = Edge<FlowEdgeData, "flowEdge">;
 
 export function FlowCustomEdge(props: EdgeProps<FlowEdgeType>) {
-  const { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, style } = props;
+  const { id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data } = props;
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -19,69 +19,92 @@ export function FlowCustomEdge(props: EdgeProps<FlowEdgeType>) {
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 16,
+    borderRadius: 20,
   });
 
-  const color = data?.color || "#a1a1aa";
+  const color = data?.color || "#71717a";
+  const label = data?.label;
+  const labelWidth = label ? Math.max(label.length * 6.5 + 16, 40) : 0;
 
   return (
-    <>
-      {/* Shadow path */}
+    <g>
+      {/* Glow path */}
       <path
         d={edgePath}
         fill="none"
         stroke={color}
-        strokeWidth={6}
-        strokeOpacity={0.08}
+        strokeWidth={8}
+        strokeOpacity={0.06}
+        strokeLinecap="round"
       />
-      {/* Main path */}
-      <BaseEdge
-        path={edgePath}
-        style={{
-          ...style,
-          stroke: color,
-          strokeWidth: 2,
-          strokeOpacity: 0.6,
-        }}
-      />
-      {/* Animated dash */}
+
+      {/* Base path */}
       <path
         d={edgePath}
         fill="none"
         stroke={color}
         strokeWidth={2}
-        strokeDasharray="6 4"
-        strokeOpacity={0.8}
+        strokeOpacity={0.25}
+        strokeLinecap="round"
+      />
+
+      {/* Animated flow */}
+      <path
+        d={edgePath}
+        fill="none"
+        stroke={color}
+        strokeWidth={2}
+        strokeOpacity={0.7}
+        strokeLinecap="round"
+        strokeDasharray="8 12"
       >
         <animate
           attributeName="stroke-dashoffset"
           from="0"
-          to="-10"
-          dur="1s"
+          to="-20"
+          dur="1.5s"
           repeatCount="indefinite"
         />
       </path>
-      {/* Particle */}
-      <circle r={3} fill={color} opacity={0.9}>
-        <animateMotion dur="2.5s" repeatCount="indefinite" path={edgePath} />
+
+      {/* Particle with glow */}
+      <circle r={5} fill={color} opacity={0.15}>
+        <animateMotion dur="3s" repeatCount="indefinite" path={edgePath} />
       </circle>
+      <circle r={3} fill={color} opacity={0.8}>
+        <animateMotion dur="3s" repeatCount="indefinite" path={edgePath} />
+      </circle>
+      <circle r={1.5} fill="#fafafa" opacity={0.9}>
+        <animateMotion dur="3s" repeatCount="indefinite" path={edgePath} />
+      </circle>
+
       {/* Label */}
-      {data?.label && (
+      {label && (
         <g transform={`translate(${labelX}, ${labelY})`}>
-          <rect x={-30} y={-10} width={60} height={18} rx={4} fill="#18181b" stroke={color + "30"} strokeWidth={1} />
+          <rect
+            x={-labelWidth / 2}
+            y={-11}
+            width={labelWidth}
+            height={20}
+            rx={4}
+            fill="#09090b"
+            stroke={color}
+            strokeWidth={0.5}
+            strokeOpacity={0.3}
+          />
           <text
             textAnchor="middle"
             dominantBaseline="central"
-            fill={color}
+            fill="#a1a1aa"
             fontSize={10}
             fontWeight={500}
             fontFamily="var(--font-sans)"
             dy={-1}
           >
-            {data.label}
+            {label}
           </text>
         </g>
       )}
-    </>
+    </g>
   );
 }
