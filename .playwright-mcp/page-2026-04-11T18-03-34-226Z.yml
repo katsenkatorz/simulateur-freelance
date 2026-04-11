@@ -1,0 +1,110 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "Simulateur Freelance Dev" [level=1] [ref=e5]
+      - paragraph [ref=e6]: Comparez 5 statuts · Barème 2026 · Ajustez CA, régime fiscal et stratégie
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - generic [ref=e10]: CA annuel HT
+          - generic [ref=e11]: 100 000 €
+        - slider [ref=e12] [cursor=pointer]: "100000"
+        - generic [ref=e13]:
+          - generic [ref=e14]: 30k
+          - generic [ref=e15]: 100k
+          - generic [ref=e16]: 200k
+          - generic [ref=e17]: 300k
+          - generic [ref=e18]: 500k
+        - generic [ref=e19]: ⚠️ Micro plafonné à 83 600 €
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e22]: Parts IR
+          - generic [ref=e23]:
+            - button "1" [ref=e24] [cursor=pointer]
+            - button "1.5" [ref=e25] [cursor=pointer]
+            - button "2" [ref=e26] [cursor=pointer]
+            - button "2.5" [ref=e27] [cursor=pointer]
+            - button "3" [ref=e28] [cursor=pointer]
+          - generic [ref=e29]: 1=célib · 2=couple · +0.5/enfant
+        - generic [ref=e30]:
+          - generic [ref=e31]: Stratégie
+          - generic [ref=e32]:
+            - button "A — Tout en salaire" [ref=e33] [cursor=pointer]
+            - button "B — Capitaliser" [ref=e34] [cursor=pointer]
+          - generic [ref=e35]: B = salaire choisi + capital en société (IS requis)
+        - generic [ref=e36]:
+          - generic [ref=e37]: Seuil IS 15%
+          - generic [ref=e38]:
+            - button "≤ 42 500 €" [ref=e39] [cursor=pointer]
+            - button "≤ 100 000 €" [ref=e40] [cursor=pointer]
+          - generic [ref=e41]: Effet visible en mode B uniquement
+    - generic [ref=e42]:
+      - generic [ref=e43] [cursor=pointer]:
+        - generic [ref=e44]: FICTIF
+        - generic [ref=e45]: 🧑‍💻
+        - generic [ref=e46]: Micro
+        - generic [ref=e47]: 61 496 €
+        - generic [ref=e48]: net après IR/an
+        - generic [ref=e49]: 5 125 €/mois
+        - generic [ref=e53]: 61% conservé
+      - generic [ref=e54] [cursor=pointer]:
+        - generic [ref=e55]: 📋
+        - generic [ref=e56]: EI IS
+        - generic [ref=e57]: 56 413 €
+        - generic [ref=e58]: net après IR/an
+        - generic [ref=e59]: 4 701 €/mois
+        - generic [ref=e63]: 56% conservé
+      - generic [ref=e64] [cursor=pointer]:
+        - generic [ref=e65]: 🏢
+        - generic [ref=e66]: EURL IS
+        - generic [ref=e67]: 56 413 €
+        - generic [ref=e68]: net après IR/an
+        - generic [ref=e69]: 4 701 €/mois
+        - generic [ref=e73]: 56% conservé
+      - generic [ref=e74] [cursor=pointer]:
+        - generic [ref=e75]: 🏛️
+        - generic [ref=e76]: SASU IS
+        - generic [ref=e77]: 42 529 €
+        - generic [ref=e78]: net après IR/an
+        - generic [ref=e79]: 3 544 €/mois
+        - generic [ref=e83]: 43% conservé
+      - generic [ref=e84] [cursor=pointer]:
+        - generic [ref=e85]: 🐟
+        - generic [ref=e86]: SASU+Holding
+        - generic [ref=e87]: 52 457 €
+        - generic [ref=e88]: net après IR/an
+        - generic [ref=e89]: 4 371 €/mois
+        - generic [ref=e93]: 52% conservé
+    - generic [ref=e105]:
+      - generic [ref=e106]:
+        - generic [ref=e107]:
+          - heading "📋 EI IS · Mode A" [level=2] [ref=e108]
+          - generic [ref=e110]:
+            - button "IR" [ref=e111] [cursor=pointer]
+            - button "IS (depuis 2022)" [ref=e112] [cursor=pointer]
+        - generic [ref=e113]:
+          - button "📋 Synthèse" [ref=e114] [cursor=pointer]
+          - button "📊 Flux" [active] [ref=e115] [cursor=pointer]
+          - button "🔍 Cotisations" [ref=e116] [cursor=pointer]
+      - img [ref=e158]:
+        - generic [ref=e159]:
+          - generic [ref=e162]: 👤 Client
+          - generic [ref=e163]: 100 000 €
+        - generic [ref=e168]: CA
+        - generic [ref=e169]:
+          - generic [ref=e172]: 📋 EI IS
+          - generic [ref=e173]: 100 000 €
+        - generic [ref=e178]: URSSAF TNS ~43%
+        - generic [ref=e179]:
+          - generic [ref=e182]: 📋 URSSAF
+          - generic [ref=e183]: 32 168 €
+          - generic [ref=e184]: TNS ~43%
+        - generic [ref=e189]: IR 11 419 €
+        - generic [ref=e190]:
+          - generic [ref=e193]: 👤 Vous
+          - generic [ref=e194]: 56 413 €
+          - generic [ref=e195]: 4 701 €/mois
+    - generic [ref=e94]: "⚠️ Barème 2026. Simulation simplifiée. Micro BNC (abattement 34%). TNS ~43%, charges SASU ~77%. IS : 15% ≤ 42 500 €, 25% au-delà. EI peut opter IS depuis 2022. SASU peut opter IR (5 ans max). Carrière complète = 43 ans. Valider avec un expert-comptable."
+  - button "Open Next.js Dev Tools" [ref=e100] [cursor=pointer]:
+    - img [ref=e101]
+  - alert [ref=e104]
