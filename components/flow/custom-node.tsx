@@ -16,22 +16,19 @@ type FlowNodeType = Node<FlowNodeData, "flowNode">;
 
 export function FlowCustomNode({ data }: NodeProps<FlowNodeType>) {
   return (
-    <div
-      className="relative rounded-lg border bg-bg-card px-4 py-3 min-w-[160px] text-center shadow-lg"
-      style={{ borderColor: data.color + "40" }}
-    >
+    <div className="relative rounded-lg border border-border-default bg-bg-card px-5 py-3 min-w-[170px] text-center">
       {/* Accent bar top */}
       <div
-        className="absolute top-0 left-2 right-2 h-[2px] rounded-full"
+        className="absolute top-0 left-3 right-3 h-[2px] rounded-full opacity-60"
         style={{ background: data.color }}
       />
 
       <Handle type="target" position={Position.Top} className="!bg-transparent !border-0 !w-0 !h-0" />
 
-      <div className="text-xs font-medium mb-1" style={{ color: data.color }}>
+      <div className="text-[11px] font-medium mb-1 text-text-secondary">
         {data.icon ? data.icon + " " : ""}{data.label}
       </div>
-      <div className="text-lg font-bold font-mono text-text-primary">
+      <div className="text-base font-bold font-mono text-text-primary">
         {fmt(data.amount)}
       </div>
       {data.sub && (

@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/engine";
+import { useAnimatedNumber } from "@/hooks/use-animated-number";
 import type { StructConfig } from "@/lib/types";
 
 interface StructureCardProps {
@@ -17,6 +18,8 @@ interface StructureCardProps {
 export function StructureCard({ struct, net, ret, ca, isB, selected, onClick }: StructureCardProps) {
   const total = net + ret;
   const pct = ca > 0 ? Math.round(total / ca * 100) : 0;
+  const animNet = useAnimatedNumber(net);
+  const animMonthly = useAnimatedNumber(Math.round(net / 12));
 
   return (
     <button
@@ -41,7 +44,7 @@ export function StructureCard({ struct, net, ret, ca, isB, selected, onClick }: 
       </div>
 
       <div className="font-mono text-2xl font-bold text-text-primary mb-0.5">
-        {fmt(net)}
+        {fmt(animNet)}
       </div>
       <div className="text-[11px] text-text-tertiary mb-1">
         {ret > 0 ? "net perso/an" : "net après IR/an"}
@@ -49,7 +52,7 @@ export function StructureCard({ struct, net, ret, ca, isB, selected, onClick }: 
 
       <div className="flex items-baseline gap-1 mb-3">
         <span className={cn("font-mono text-sm font-semibold", selected ? "text-text-primary" : "text-text-secondary")}>
-          {fmt(Math.round(net / 12))}
+          {fmt(animMonthly)}
         </span>
         <span className="text-[11px] text-text-tertiary">/mois</span>
       </div>
