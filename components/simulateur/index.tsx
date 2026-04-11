@@ -57,10 +57,10 @@ function BarsViz({ items, mx }: { items: [string, number, string][]; mx: number 
   );
 }
 
-function CotisT({ items, accent }: { items: CotisItem[]; accent: string }) {
+function CotisT({ items }: { items: CotisItem[] }) {
   return (
     <div className="p-4 bg-bg-primary rounded-lg border border-border-subtle">
-      <div className="text-sm font-semibold mb-3" style={{ color: accent }}>Cotisations détaillées</div>
+      <div className="text-sm font-semibold mb-3 text-text-primary">Cotisations détaillées</div>
       <table className="w-full text-sm">
         <tbody>
           {items.map((it, i) => (
@@ -257,7 +257,7 @@ export default function App() {
                   {fmt(mandatM)}<span className="text-text-tertiary font-normal text-xs">/mois</span>
                 </span>
               </div>
-              <input type="range" min={1000} max={Math.max(maxMandat, 2000)} step={500} value={mandatM} onChange={e => setMandatM(+e.target.value)} className="w-full cursor-pointer accent-sasu" />
+              <input type="range" min={1000} max={Math.max(maxMandat, 2000)} step={500} value={mandatM} onChange={e => setMandatM(+e.target.value)} className="w-full cursor-pointer cursor-pointer" />
             </div>
           )}
 
@@ -269,7 +269,7 @@ export default function App() {
                   {fmt(Math.round(salB / 12))}<span className="text-text-tertiary font-normal text-xs">/mois</span>
                 </span>
               </div>
-              <input type="range" min={6000} max={maxSalB} step={1200} value={salB} onChange={e => setSalB(+e.target.value)} className="w-full cursor-pointer" style={{ accentColor: st.accent }} />
+              <input type="range" min={6000} max={maxSalB} step={1200} value={salB} onChange={e => setSalB(+e.target.value)} className="w-full cursor-pointer" />
             </div>
           )}
 
@@ -305,11 +305,11 @@ export default function App() {
               {sel === "holding" && (
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="text-sm font-semibold text-sasu mb-2">🏛️ SASU</div>
+                    <div className="text-sm font-semibold text-text-secondary mb-2">🏛️ SASU</div>
                     {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-holding mb-2">🏗️ Holding</div>
+                    <div className="text-sm font-semibold text-text-secondary mb-2">🏗️ Holding</div>
                     {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
                   </div>
                 </div>
@@ -357,7 +357,7 @@ export default function App() {
           )}
           {tab === "cotis" && (
             <div className="space-y-4">
-              <CotisT items={cotisItems} accent={st.accent} />
+              <CotisT items={cotisItems} />
               <RetB info={retData} />
             </div>
           )}
@@ -373,8 +373,17 @@ export default function App() {
     <div className="flex flex-col lg:flex-row min-h-screen">
       <Sidebar {...sidebarProps} />
       <MobileHeader {...sidebarProps} />
-      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-6 lg:p-8 lg:pt-10 overflow-y-auto">
         <div className="max-w-[1100px] mx-auto">
+          {/* Header desktop */}
+          <div className="hidden lg:flex items-baseline justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-bold text-text-primary">Comparaison des statuts</h2>
+              <p className="text-xs text-text-tertiary mt-0.5">Cliquez sur un statut pour voir le détail</p>
+            </div>
+            <div className="text-sm text-text-tertiary font-mono">{fmt(ca)} HT/an</div>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {structs.map(st => {
               const d = getData(st.id);

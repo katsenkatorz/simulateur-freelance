@@ -5,44 +5,38 @@
 @source "../components";
 @source "../app";
 @source "../lib";
+@source "../hooks";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Fond */
   --color-bg-primary: #09090b;
   --color-bg-card: #18181b;
   --color-bg-elevated: #27272a;
   --color-bg-hover: #27272a;
 
-  /* Bordures */
   --color-border-subtle: #27272a;
   --color-border-default: #3f3f46;
   --color-border-strong: #52525b;
 
-  /* Texte */
   --color-text-primary: #fafafa;
   --color-text-secondary: #a1a1aa;
   --color-text-tertiary: #71717a;
 
-  /* Accent */
   --color-accent: #6366f1;
   --color-accent-hover: #818cf8;
   --color-accent-muted: #6366f122;
 
-  /* Sémantique */
   --color-negative: #f43f5e;
   --color-tax: #f59e0b;
   --color-positive: #22c55e;
 
-  /* Statuts */
   --color-micro: #60a5fa;
   --color-ei: #2dd4bf;
   --color-eurl: #34d399;
   --color-sasu: #a78bfa;
   --color-holding: #fbbf24;
 
-  /* Fonts */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
@@ -95,8 +89,8 @@
   --card-foreground: #fafafa;
   --popover: #18181b;
   --popover-foreground: #fafafa;
-  --primary: #6366f1;
-  --primary-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #09090b;
   --secondary: #27272a;
   --secondary-foreground: #fafafa;
   --muted: #27272a;
@@ -106,7 +100,7 @@
   --destructive: #f43f5e;
   --border: #27272a;
   --input: #27272a;
-  --ring: #6366f1;
+  --ring: #a1a1aa;
   --chart-1: #60a5fa;
   --chart-2: #2dd4bf;
   --chart-3: #34d399;
@@ -127,4 +121,52 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Custom range slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 32px;
+}
+
+input[type="range"]::-webkit-slider-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #27272a;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fafafa;
+  border: 2px solid #3f3f46;
+  margin-top: -6px;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  border-color: #a1a1aa;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #27272a;
+  border: none;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fafafa;
+  border: 2px solid #3f3f46;
+  cursor: pointer;
 }
