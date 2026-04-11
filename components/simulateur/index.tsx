@@ -18,6 +18,8 @@ import { Header } from "@/components/layout/header";
 import { Sidebar, MobileControls } from "@/components/layout/sidebar";
 import { SankeyOverview } from "@/components/comparison/sankey-overview";
 import { FlowTab } from "@/components/detail/flow-tab";
+import { RepartitionBar, type Segment } from "@/components/simulateur/repartition-bar";
+import { ComparisonMini } from "@/components/simulateur/comparison-mini";
 import { simToSankey } from "@/lib/sankey";
 import { User, FileText, Building2, Landmark, Layers } from "lucide-react";
 import type { ElementType } from "react";
@@ -342,41 +344,32 @@ export default function App() {
                     )}
 
                     {/* Barre de répartition */}
-                    <div className="mt-4 space-y-2">
-                      <div className="flex h-3 rounded-full overflow-hidden bg-bg-elevated gap-px">
-                        <div style={{ width: pCo + "%" }} className="bg-zinc-500 rounded-l-full transition-all duration-500" />
-                        <div style={{ width: pIr + "%" }} className="bg-zinc-600 transition-all duration-500" />
-                        <div style={{ width: pNet + "%" }} className="bg-text-primary transition-all duration-500" />
-                        {pRet > 0 && <div style={{ width: pRet + "%" }} className="bg-positive/70 rounded-r-full transition-all duration-500" />}
-                      </div>
-
-                      {/* Légende */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-sm bg-zinc-500 shrink-0" />
-                          <span className="text-text-tertiary">Cotisations</span>
-                          <span className="font-mono text-text-secondary ml-auto">{pCo}%</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-sm bg-zinc-600 shrink-0" />
-                          <span className="text-text-tertiary">Impôts</span>
-                          <span className="font-mono text-text-secondary ml-auto">{pIr}%</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-sm bg-text-primary shrink-0" />
-                          <span className="text-text-tertiary">Net</span>
-                          <span className="font-mono text-text-secondary ml-auto">{pNet}%</span>
-                        </div>
-                        {pRet > 0 && (
-                          <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-sm bg-positive/70 shrink-0" />
-                            <span className="text-text-tertiary">Capital</span>
-                            <span className="font-mono text-text-secondary ml-auto">{pRet}%</span>
-                          </div>
-                        )}
-                      </div>
+                    <div className="mt-5">
+                      <RepartitionBar
+                        segments={[
+                          { label: "Cotisations", amount: sim.co, percent: pCo, colorClass: "text-zinc-500", bgClass: "bg-zinc-500", monthly: Math.round(sim.co / 12) },
+                          { label: "Impôts", amount: (sim.is || 0) + sim.ir, percent: pIr, colorClass: "text-zinc-600", bgClass: "bg-zinc-600", monthly: Math.round(((sim.is || 0) + sim.ir) / 12) },
+                          { label: "Net perso", amount: sim.net, percent: pNet, colorClass: "text-zinc-100", bgClass: "bg-zinc-200", monthly: Math.round(sim.net / 12) },
+                          ...(pRet > 0 ? [{ label: "Capital", amount: sim.ret, percent: pRet, colorClass: "text-positive", bgClass: "bg-positive/70", monthly: Math.round(sim.ret / 12) } as Segment] : []),
+                        ]}
+                        ca={ca}
+                      />
                     </div>
                   </div>
+
+                  {/* Comparaison */}
+                  <Section title="Comparer les statuts" defaultOpen={false}>
+                    <ComparisonMini
+                      rows={structs.map(s => ({
+                        struct: s,
+                        icon: STRUCT_ICONS[s.id],
+                        ...getData(s.id),
+                        ca: s.id === "micro" ? mCA : ca,
+                      }))}
+                      selectedId={sel}
+                      onSelect={openD}
+                    />
+                  </Section>
 
                   {/* Sections collapsibles */}
                   {sel === "holding" && (
