@@ -291,42 +291,67 @@ export default function App() {
 
             {/* Content */}
             {tab === "overview" && (
-              <div>
-                {sel === "holding" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <div className="text-sm font-semibold text-text-secondary mb-2 flex items-center gap-1.5"><Landmark size={14} /> SASU</div>
-                      {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-text-secondary mb-2 flex items-center gap-1.5"><Layers size={14} /> Holding</div>
-                      {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                    </div>
+              <div className="space-y-6">
+                {/* KPI cards */}
+                <div className={cn("grid gap-3", sim.ret > 0 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3")}>
+                  <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
+                    <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">Cotisations</div>
+                    <div className="text-lg font-bold font-mono text-negative">{fmt(sim.co)}</div>
+                    <div className="text-[11px] text-text-tertiary">{ca > 0 ? Math.round(sim.co / ca * 100) : 0}% du CA</div>
                   </div>
-                )}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>
-                    {sim.lines.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                    <div className="flex justify-between py-3 border-t border-text-primary/20 mt-2 text-lg font-bold text-text-primary">
-                      <span>Net</span>
-                      <span className="font-mono">{fmt(sim.net)}</span>
-                    </div>
-                    {sim.ret > 0 && (
-                      <div className="flex justify-between py-2 text-sm font-bold text-positive">
-                        <span>Dans la société</span>
-                        <span className="font-mono">{fmt(sim.ret)}</span>
-                      </div>
-                    )}
+                  <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
+                    <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">{sim.is ? "IR + IS" : "Impôt (IR)"}</div>
+                    <div className="text-lg font-bold font-mono text-tax">{fmt((sim.is || 0) + sim.ir)}</div>
+                    <div className="text-[11px] text-text-tertiary">{ca > 0 ? Math.round(((sim.is || 0) + sim.ir) / ca * 100) : 0}% du CA</div>
                   </div>
+                  <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
+                    <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">Net personnel</div>
+                    <div className="text-lg font-bold font-mono text-text-primary">{fmt(sim.net)}</div>
+                    <div className="text-[11px] text-text-tertiary">{fmt(Math.round(sim.net / 12))}/mois</div>
+                  </div>
+                  {sim.ret > 0 && (
+                    <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
+                      <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">Capital société</div>
+                      <div className="text-lg font-bold font-mono text-positive">{fmt(sim.ret)}</div>
+                      <div className="text-[11px] text-text-tertiary">{ca > 0 ? Math.round(sim.ret / ca * 100) : 0}% du CA</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bars */}
+                <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
                   <BarsViz
                     items={[
-                      ["URSSAF", sim.co, "#f43f5e"],
+                      ["Cotisations", sim.co, "#f43f5e"],
                       [sim.is ? "IS + IR" : "IR", (sim.is || 0) + sim.ir, "#f59e0b"],
                       ["Net perso", sim.net, "#fafafa"],
                       ...(sim.ret > 0 ? [["Capitalisé" as string, sim.ret as number, "#22c55e" as string] as [string, number, string]] : []),
                     ]}
                     mx={ca}
                   />
+                </div>
+
+                {/* Detail breakdown */}
+                {sel === "holding" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
+                      <div className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-1.5"><Landmark size={14} /> SASU opérationnelle</div>
+                      {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                    </div>
+                    <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
+                      <div className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-1.5"><Layers size={14} /> Holding</div>
+                      {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
+                  <div className="text-sm font-semibold text-text-secondary mb-3">Détail des calculs</div>
+                  {sim.lines.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                  <div className="flex justify-between py-3 border-t border-text-primary/10 mt-2 text-base font-bold text-text-primary">
+                    <span>Net après impôt</span>
+                    <span className="font-mono">{fmt(sim.net)}</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -340,6 +365,20 @@ export default function App() {
             )}
             {tab === "cotis" && (
               <div className="space-y-4">
+                {/* Résumé cotisations */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
+                    <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">Total cotisations</div>
+                    <div className="text-lg font-bold font-mono text-negative">{fmt(cotisItems.reduce((s, c) => s + c.a, 0))}</div>
+                  </div>
+                  <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
+                    <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">Retraite estimée</div>
+                    <div className="text-lg font-bold font-mono text-text-primary">~{fmt(retData.pen)}/mois</div>
+                    <div className="text-[11px]">
+                      <span className={retData.tr >= 4 ? "text-positive" : "text-tax"}>{retData.tr}/4 trimestres</span>
+                    </div>
+                  </div>
+                </div>
                 <CotisT items={cotisItems} />
                 <RetB info={retData} />
               </div>
