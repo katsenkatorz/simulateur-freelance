@@ -67,6 +67,18 @@ function BarsViz({ items, mx }: { items: [string, number, string][]; mx: number 
   );
 }
 
+function stripEmoji(s: string): string {
+  return s.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FEFF}]/gu, "").trim();
+}
+
+function StatusDot({ status }: { status: string }) {
+  if (status.includes("❌")) return <span className="inline-block w-2 h-2 rounded-full bg-negative" title="Non couvert" />;
+  if (status.includes("⚠")) return <span className="inline-block w-2 h-2 rounded-full bg-tax" title="Partiel" />;
+  if (status.includes("✅✅")) return <span className="inline-block w-2.5 h-2.5 rounded-full bg-positive ring-2 ring-positive/30" title="Excellente couverture" />;
+  if (status.includes("✅")) return <span className="inline-block w-2 h-2 rounded-full bg-positive" title="Couvert" />;
+  return <span className="inline-block w-2 h-2 rounded-full bg-text-tertiary" title="Variable" />;
+}
+
 function CotisT({ items }: { items: CotisItem[] }) {
   return (
     <div className="p-4 bg-bg-primary rounded-lg border border-border-subtle">
@@ -75,14 +87,12 @@ function CotisT({ items }: { items: CotisItem[] }) {
         <tbody>
           {items.map((it, i) => (
             <tr key={i} className="border-b border-border-subtle last:border-0">
-              <td className="py-2 text-text-secondary">{it.n}</td>
-              <td className={cn("py-2 font-mono font-medium text-right", it.a > 0 ? "text-negative" : "text-text-tertiary")}>
+              <td className="py-2.5 text-text-secondary">{stripEmoji(it.n)}</td>
+              <td className={cn("py-2.5 font-mono font-medium text-right w-24", it.a > 0 ? "text-text-primary" : "text-text-tertiary")}>
                 {it.a > 0 ? fmt(it.a) : "—"}
               </td>
-              <td className="py-2 text-right text-xs w-8">
-                <span className={it.c.startsWith("❌") ? "text-negative" : it.c.startsWith("⚠") ? "text-tax" : "text-positive"}>
-                  {it.c}
-                </span>
+              <td className="py-2.5 text-center w-8">
+                <StatusDot status={it.c} />
               </td>
             </tr>
           ))}
@@ -105,22 +115,28 @@ function RetB({ info }: { info: RetResult }) {
 }
 
 function CapUsage({ type }: { type: string }) {
-  const data: Record<string, { t: string; i: string[][] }> = {
-    eurl: { t: "Capital dans la société (EURL)", i: [["Embaucher / Matériel", "Investissement productif"], ["Dividendes futurs", "Soumis TNS > 10% capital"], ["Bourse", "Risque requalification"]] },
-    sasu: { t: "Capital dans la société (SASU)", i: [["Embaucher / Matériel", "Investissement productif"], ["Dividendes futurs", "Flat tax 30% SANS cotisations"], ["Bourse", "Change l'objet social"]] },
-    holding: { t: "Capital dans la société (Holding)", i: [["Bourse / ETF", "Investir à l'IS"], ["Crédit Lombard", "Emprunter sans vendre"], ["SCI / Immobilier", "Via la holding"], ["Prêt CCA", "Remboursement non imposé"], ["Levier fiscal", "IS 15-25% vs IR 30-45%"]] },
-    ei: { t: "Capital dans l'EI (IS)", i: [["Matériel / Trésorerie", "Investissement"], ["Patrimoine", "Séparé depuis 2022 mais pas de personnalité morale"]] },
+  const data: Record<string, { t: string; i: [string, string, "ok" | "warn" | "good"][] }> = {
+    eurl: { t: "Utilisation du capital (EURL)", i: [["Embaucher / Matériel", "Investissement productif", "ok"], ["Dividendes futurs", "Soumis TNS > 10% capital", "warn"], ["Bourse", "Risque requalification", "warn"]] },
+    sasu: { t: "Utilisation du capital (SASU)", i: [["Embaucher / Matériel", "Investissement productif", "ok"], ["Dividendes futurs", "Flat tax 30% SANS cotisations", "good"], ["Bourse", "Change l'objet social", "warn"]] },
+    holding: { t: "Utilisation du capital (Holding)", i: [["Bourse / ETF", "Investir à l'IS", "good"], ["Crédit Lombard", "Emprunter sans vendre", "good"], ["SCI / Immobilier", "Via la holding", "good"], ["Prêt CCA", "Remboursement non imposé", "good"], ["Levier fiscal", "IS 15-25% vs IR 30-45%", "good"]] },
+    ei: { t: "Utilisation du capital (EI IS)", i: [["Matériel / Trésorerie", "Investissement", "ok"], ["Patrimoine", "Séparé depuis 2022 mais pas de personnalité morale", "warn"]] },
   };
   const d = data[type];
   if (!d) return null;
   return (
     <div className="p-4 bg-bg-primary rounded-lg border border-border-subtle">
-      <div className="text-sm font-semibold text-positive mb-3">{d.t}</div>
-      <div className="space-y-1.5">
+      <div className="text-sm font-semibold text-text-primary mb-4">{d.t}</div>
+      <div className="space-y-3">
         {d.i.map((it, i) => (
-          <div key={i} className="text-sm">
-            <span className="text-text-primary font-medium">{it[0]}</span>
-            <span className="text-text-tertiary">{" — " + it[1]}</span>
+          <div key={i} className="flex items-start gap-3">
+            <span className={cn(
+              "inline-block w-2 h-2 rounded-full mt-1.5 shrink-0",
+              it[2] === "good" ? "bg-positive" : it[2] === "warn" ? "bg-tax" : "bg-text-tertiary"
+            )} />
+            <div>
+              <div className="text-sm font-medium text-text-primary">{it[0]}</div>
+              <div className="text-xs text-text-tertiary">{it[1]}</div>
+            </div>
           </div>
         ))}
       </div>

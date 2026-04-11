@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { RangeSlider } from "@/components/ui/range-slider";
 import { MICRO_CAP } from "@/lib/fiscal";
 import { fmt } from "@/lib/engine";
 import { Users, Target, Scale, Briefcase, Wallet } from "lucide-react";
@@ -174,7 +175,7 @@ export function Sidebar({
             <span className="text-xs text-text-tertiary">Rémunération</span>
             <span className="text-sm font-bold font-mono text-text-primary">{fmt(mandatM)}<span className="text-text-tertiary font-normal text-[10px]">/mois</span></span>
           </div>
-          <input type="range" min={1000} max={Math.max(maxMandat, 2000)} step={500} value={mandatM} onChange={e => setMandatM(+e.target.value)} className="w-full cursor-pointer" />
+          <RangeSlider min={1000} max={Math.max(maxMandat, 2000)} step={500} value={mandatM} onChange={setMandatM} />
         </div>
       )}
 
@@ -186,7 +187,7 @@ export function Sidebar({
             <span className="text-xs text-text-tertiary">Net mensuel</span>
             <span className="text-sm font-bold font-mono text-text-primary">{fmt(Math.round(salB / 12))}<span className="text-text-tertiary font-normal text-[10px]">/mois</span></span>
           </div>
-          <input type="range" min={6000} max={maxSalB} step={1200} value={salB} onChange={e => setSalB(+e.target.value)} className="w-full cursor-pointer" />
+          <RangeSlider min={6000} max={maxSalB} step={1200} value={salB} onChange={setSalB} />
           <div className="flex justify-between text-[10px] text-text-tertiary mt-1">
             <span>{fmt(6000)}/an</span>
             <span>{fmt(maxSalB)}/an</span>
