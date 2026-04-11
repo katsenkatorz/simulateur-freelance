@@ -19,6 +19,7 @@ import { Sidebar, MobileControls } from "@/components/layout/sidebar";
 import { SankeyOverview } from "@/components/comparison/sankey-overview";
 import { FlowTab } from "@/components/detail/flow-tab";
 import { RepartitionBar, type Segment } from "@/components/simulateur/repartition-bar";
+import { TreemapDetail } from "@/components/simulateur/treemap-detail";
 import { ComparisonMini } from "@/components/simulateur/comparison-mini";
 import { simToSankey } from "@/lib/sankey";
 import { User, FileText, Building2, Landmark, Layers } from "lucide-react";
@@ -356,6 +357,11 @@ export default function App() {
                       />
                     </div>
                   </div>
+
+                  {/* Treemap détaillé */}
+                  <Section title="Détail de la répartition">
+                    <TreemapDetail sim={sim} cotisItems={cotisItems} ca={ca} sel={sel} isB={isB} />
+                  </Section>
 
                   {/* Comparaison */}
                   <Section title="Comparer les statuts" defaultOpen={false}>
