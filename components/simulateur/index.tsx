@@ -347,10 +347,10 @@ export default function App() {
                     <div className="mt-5">
                       <RepartitionBar
                         segments={[
-                          { label: "Cotisations", amount: sim.co, percent: pCo, colorClass: "text-zinc-500", bgClass: "bg-zinc-500", monthly: Math.round(sim.co / 12) },
-                          { label: "Impôts", amount: (sim.is || 0) + sim.ir, percent: pIr, colorClass: "text-zinc-600", bgClass: "bg-zinc-600", monthly: Math.round(((sim.is || 0) + sim.ir) / 12) },
-                          { label: "Net perso", amount: sim.net, percent: pNet, colorClass: "text-zinc-100", bgClass: "bg-zinc-200", monthly: Math.round(sim.net / 12) },
-                          ...(pRet > 0 ? [{ label: "Capital", amount: sim.ret, percent: pRet, colorClass: "text-positive", bgClass: "bg-positive/70", monthly: Math.round(sim.ret / 12) } as Segment] : []),
+                          { label: "Cotisations", amount: sim.co, percent: pCo, colorClass: "text-zinc-500", bgClass: "bg-zinc-500", color: "#71717a", monthly: Math.round(sim.co / 12) },
+                          { label: "Impôts", amount: (sim.is || 0) + sim.ir, percent: pIr, colorClass: "text-zinc-600", bgClass: "bg-zinc-600", color: "#52525b", monthly: Math.round(((sim.is || 0) + sim.ir) / 12) },
+                          { label: "Net perso", amount: sim.net, percent: pNet, colorClass: "text-zinc-100", bgClass: "bg-zinc-200", color: "#e4e4e7", monthly: Math.round(sim.net / 12) },
+                          ...(pRet > 0 ? [{ label: "Capital", amount: sim.ret, percent: pRet, colorClass: "text-positive", bgClass: "bg-positive/70", color: "#22c55e", monthly: Math.round(sim.ret / 12) } as Segment] : []),
                         ]}
                         ca={ca}
                       />
