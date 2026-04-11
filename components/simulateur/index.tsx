@@ -159,7 +159,7 @@ function ToggleGroup({ options, value, onChange }: {
 export default function App() {
   const [ca, setCa] = useState(100000);
   const [parts, setParts] = useState(1);
-  const [sel, setSel] = useState<string | null>(null);
+  const [sel, setSel] = useState<string>("micro");
   const [microTab, setMicroTab] = useState("hypo");
   const [gm, setGm] = useState("A");
   const [salB, setSalB] = useState(20400);
@@ -208,11 +208,11 @@ export default function App() {
     { id: "holding", name: "SASU+Holding", icon: "holding", color: "#d97706", accent: "#fbbf24", noB: false },
   ];
 
-  const openD = (id: string) => { setSel(sel === id ? null : id); setTab("overview"); };
+  const openD = (id: string) => { setSel(id); setTab("overview"); };
 
   function renderDetail() {
-    if (!sel) return null;
     const st = structs.find(s => s.id === sel)!;
+    if (!st) return null;
     const isB = gm === "B" && !st.noB;
     let sim: Sim, cotisItems: CotisItem[], retData: RetResult, regToggle: React.ReactNode = null;
 
@@ -247,7 +247,7 @@ export default function App() {
     if (isB) tabItems.push({ k: "capital", l: "Capital" });
 
     return (
-      <div className="mt-6 border border-border-subtle rounded-xl overflow-hidden bg-bg-card">
+      <div className="border border-border-subtle rounded-xl overflow-hidden bg-bg-card">
         <div className="px-4 md:px-6 pt-5 pb-0 border-b border-border-subtle">
           <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
             <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
@@ -386,33 +386,31 @@ export default function App() {
       <MobileHeader {...sidebarProps} />
       <main className="flex-1 p-4 md:p-6 lg:p-8 lg:pt-10 overflow-y-auto">
         <div className="max-w-[1100px] mx-auto">
-          {/* Header desktop */}
-          <div className="hidden lg:flex items-baseline justify-between mb-6">
-            <div>
-              <h2 className="text-lg font-bold text-text-primary">Comparaison des statuts</h2>
-              <p className="text-xs text-text-tertiary mt-0.5">Cliquez sur un statut pour voir le détail</p>
-            </div>
-            <div className="text-sm text-text-tertiary font-mono">{fmt(ca)} HT/an</div>
-          </div>
-
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+          {/* Structure selector */}
+          <div className="flex items-center gap-1 p-1 bg-bg-card rounded-lg border border-border-subtle mb-6 overflow-x-auto scrollbar-none">
             {structs.map(st => {
               const d = getData(st.id);
-              const showB = gm === "B" && !st.noB;
               const Icon = STRUCT_ICONS[st.id];
+              const isSelected = sel === st.id;
+              const showB = gm === "B" && !st.noB;
               return (
-                <div key={st.id} className="min-w-[180px] flex-1">
-                  <StructureCard
-                    struct={st}
-                    icon={Icon}
-                    net={d.net}
-                    ret={d.ret}
-                    ca={d.dCA}
-                    isB={showB}
-                    selected={sel === st.id}
-                    onClick={() => openD(st.id)}
-                  />
-                </div>
+                <button
+                  key={st.id}
+                  onClick={() => openD(st.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap cursor-pointer min-w-0",
+                    isSelected
+                      ? "bg-bg-elevated text-text-primary shadow-sm"
+                      : "text-text-tertiary hover:text-text-secondary"
+                  )}
+                >
+                  {Icon && <Icon size={15} className={isSelected ? "text-text-primary" : "text-text-tertiary"} />}
+                  <span className="font-semibold">{st.name}</span>
+                  <span className={cn("font-mono text-xs", isSelected ? "text-text-secondary" : "text-text-tertiary")}>
+                    {fmt(d.net)}
+                  </span>
+                  {showB && <span className="text-[9px] bg-text-primary/5 text-text-tertiary px-1 rounded">B</span>}
+                </button>
               );
             })}
           </div>
