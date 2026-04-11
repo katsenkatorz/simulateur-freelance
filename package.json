@@ -1,11 +1,14 @@
 {
-  "name": "nextjs-init",
-  "version": "0.1.0",
+  "name": "simulateur-freelance",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "deploy": "vercel deploy",
+    "deploy:prod": "vercel --prod",
+    "logs": "vercel logs"
   },
   "dependencies": {
     "next": "16.2.2",
