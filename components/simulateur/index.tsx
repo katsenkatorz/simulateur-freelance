@@ -14,11 +14,7 @@ import {
 import type { Sim, Line, CotisItem, RetResult, StructConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { TrendingUp, Users, Target, Info } from "lucide-react";
 
@@ -40,7 +36,7 @@ function Bar({ v, mx, c }: { v: number; mx: number; c: string }) {
 function LI({ d }: { d: Line }) {
   const c = d.t === "s" ? "text-white" : d.t === "c" ? "text-charge" : d.t === "x" ? "text-tax" : "text-text-primary";
   return (
-    <div className="flex justify-between py-1 border-b border-border-custom text-sm">
+    <div className="flex justify-between py-1 border-b border-[#1a1a3e] text-sm">
       <span className={cn(c, d.t === "s" && "font-semibold")}>{d.l}</span>
       <span className={cn(d.a < 0 ? "text-charge" : c, d.t === "s" && "font-semibold", "whitespace-nowrap ml-2")}>
         {d.a >= 0 ? fmt(d.a) : "- " + fmt(Math.abs(d.a))}
@@ -244,7 +240,7 @@ export default function App() {
     if (isB) tabItems.push({ k: "capital", l: "Capital", icon: "💡" });
 
     return (
-      <Card className="border-2 overflow-hidden mb-3.5 bg-bg-card" style={{ borderColor: st.color + "40" }}>
+      <div className="border-2 overflow-hidden mb-3.5 bg-bg-card rounded-xl" style={{ borderColor: st.color + "40" }}>
         <div className="px-4 pt-3.5 pb-0" style={{ background: st.color + "06" }}>
           <div className="flex justify-between items-center mb-1.5 flex-wrap gap-2">
             <h2 className="text-xl font-bold m-0" style={{ color: st.accent }}>
@@ -300,23 +296,24 @@ export default function App() {
             </div>
           )}
 
-          <Tabs value={tab} onValueChange={setTab} className="mt-1">
-            <TabsList className="bg-transparent border-b border-border-custom rounded-none w-full justify-start p-0 h-auto">
-              {tabItems.map(t => (
-                <TabsTrigger
-                  key={t.k}
-                  value={t.k}
-                  className="rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-bold text-text-dim data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-                  style={tab === t.k ? { borderBottomColor: st.accent } : undefined}
-                >
-                  {t.icon + " " + t.l}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <div className="flex gap-0.5 mt-1 border-b border-[#1a1a3e]">
+            {tabItems.map(t => (
+              <button
+                key={t.k}
+                onClick={() => setTab(t.k)}
+                className={cn(
+                  "flex-1 px-4 py-3 text-sm font-bold border-b-2 border-transparent bg-transparent cursor-pointer transition-colors",
+                  tab === t.k ? "text-white" : "text-text-dim hover:text-text-muted"
+                )}
+                style={tab === t.k ? { borderBottomColor: st.accent } : undefined}
+              >
+                {t.icon + " " + t.l}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <CardContent className="p-4">
+        <div className="p-4">
           {tab === "overview" && (
             <div>
               {sel === "holding" && (
@@ -363,8 +360,8 @@ export default function App() {
             </div>
           )}
           {tab === "capital" && isB && <CapUsage type={sel === "holding" ? "holding" : sel} />}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -379,8 +376,8 @@ export default function App() {
           </div>
 
           {/* Controls */}
-          <Card className="mb-4 bg-bg-card border-border-custom">
-            <CardContent className="p-4 md:p-5">
+          <div className="mb-4 bg-bg-card border-2 border-[#1a1a3e] rounded-xl">
+            <div className="p-4 md:p-5">
               {/* CA Slider */}
               <div className="mb-4">
                 <div className="flex justify-between items-baseline mb-1">
@@ -402,7 +399,7 @@ export default function App() {
                 {isCapped && <div className="mt-1 text-[11px] text-tax">{"⚠️ Micro plafonné à " + fmt(MICRO_CAP)}</div>}
               </div>
 
-              <Separator className="bg-border-custom mb-3" />
+              <div className="h-px bg-border-custom mb-3" />
 
               {/* Controls row */}
               <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] gap-4 md:gap-5 items-start">
@@ -477,8 +474,8 @@ export default function App() {
                   {gm === "A" && <div className="text-[9px] text-text-dim mt-0.5 text-right">Effet visible en mode B uniquement</div>}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Structure Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 mb-4">
@@ -487,30 +484,30 @@ export default function App() {
               const total = d.net + d.ret;
               const showB = gm === "B" && !st.noB;
               return (
-                <Card
+                <div
                   key={st.id}
                   onClick={() => openD(st.id)}
                   className={cn(
-                    "cursor-pointer transition-all duration-300 relative border-2 hover:scale-[1.02]",
+                    "cursor-pointer transition-all duration-300 relative border-2 rounded-xl hover:scale-[1.02]",
                     sel === st.id ? "bg-bg-card-hover" : "bg-bg-card"
                   )}
                   style={{
-                    borderColor: sel === st.id ? st.color : "var(--color-border-custom)",
+                    borderColor: sel === st.id ? st.color : "#1a1a3e",
                     ...(sel === st.id ? { background: st.color + "15" } : {}),
                   }}
                 >
-                  <CardContent className="p-3">
+                  <div className="p-3">
                     {st.id === "micro" && isCapped && microTab === "real" && (
-                      <Badge className="absolute -top-2 left-1.5 bg-charge text-white text-[8px] px-1.5 py-0">PLAFONNÉ</Badge>
+                      <span className="absolute -top-2 left-1.5 bg-charge text-white text-[8px] font-bold px-1.5 py-0.5 rounded">PLAFONNÉ</span>
                     )}
                     {st.id === "micro" && isCapped && microTab === "hypo" && (
-                      <Badge className="absolute -top-2 left-1.5 bg-solde text-bg-primary text-[8px] px-1.5 py-0">FICTIF</Badge>
+                      <span className="absolute -top-2 left-1.5 bg-solde text-bg-primary text-[8px] font-bold px-1.5 py-0.5 rounded">FICTIF</span>
                     )}
                     {showB && (
-                      <Badge className="absolute -top-2 right-1.5 bg-solde text-bg-primary text-[8px] px-1.5 py-0">MODE B</Badge>
+                      <span className="absolute -top-2 right-1.5 bg-solde text-bg-primary text-[8px] font-bold px-1.5 py-0.5 rounded">MODE B</span>
                     )}
                     {st.noB && gm === "B" && (
-                      <Badge className="absolute -top-2 right-1.5 bg-text-dim text-white text-[8px] px-1.5 py-0">{st.id === "micro" ? "MICRO" : "IR"}</Badge>
+                      <span className="absolute -top-2 right-1.5 bg-text-dim text-white text-[8px] font-bold px-1.5 py-0.5 rounded">{st.id === "micro" ? "MICRO" : "IR"}</span>
                     )}
                     <div className="text-xl mb-0.5">{st.icon}</div>
                     <div className="font-semibold text-xs mb-1.5" style={{ color: st.accent }}>{st.name}</div>
@@ -529,8 +526,8 @@ export default function App() {
                       <Bar v={total} mx={ca} c={st.accent} />
                     </div>
                     <div className="text-[9px] text-text-dim">{d.dCA > 0 ? Math.round(total / d.dCA * 100) : 0}% conservé</div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -539,11 +536,9 @@ export default function App() {
           {renderDetail()}
 
           {/* Disclaimer */}
-          <Card className="bg-bg-card border-border-custom">
-            <CardContent className="p-2.5 text-[10px] text-text-dim leading-relaxed">
+          <div className="bg-bg-card border-2 border-[#1a1a3e] rounded-xl p-2.5 text-[10px] text-text-dim leading-relaxed">
               {"⚠️ Barème 2026. Simulation simplifiée. Micro BNC (abattement 34%). TNS ~43%, charges SASU ~77%. IS : 15% ≤ " + fmt(isSeuil) + ", 25% au-delà. EI peut opter IS depuis 2022. SASU peut opter IR (5 ans max). Carrière complète = 43 ans. Valider avec un expert-comptable."}
-            </CardContent>
-          </Card>
+          </div>
         </div>
       </div>
     </TooltipProvider>
