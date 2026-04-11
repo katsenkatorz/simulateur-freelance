@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { ChevronDown } from "lucide-react";
 import {
   MICRO_CAP, IS_SEUIL_REDUIT, IS_SEUIL_PLF2026,
   TNS_COEFF, CHARGES_FIXES_SOCIETE, SASU_COEFF_NET,
@@ -40,13 +41,29 @@ function Bar({ v, mx, c }: { v: number; mx: number; c: string }) {
 }
 
 function LI({ d }: { d: Line }) {
-  const colorClass = d.t === "s" ? "text-text-primary" : d.t === "c" ? "text-negative" : d.t === "x" ? "text-tax" : "text-text-secondary";
+  const isSolde = d.t === "s";
   return (
-    <div className="flex justify-between py-1.5 border-b border-border-subtle text-sm">
-      <span className={cn(colorClass, d.t === "s" && "font-semibold")}>{d.l}</span>
-      <span className={cn(d.a < 0 ? "text-negative" : colorClass, d.t === "s" && "font-semibold", "whitespace-nowrap ml-3 font-mono")}>
+    <div className={cn("flex justify-between py-2 text-sm", isSolde ? "font-medium text-text-primary" : "text-text-secondary")}>
+      <span>{d.l}</span>
+      <span className={cn("whitespace-nowrap ml-3 font-mono", d.a < 0 && "text-text-tertiary")}>
         {d.a >= 0 ? fmt(d.a) : "- " + fmt(Math.abs(d.a))}
       </span>
+    </div>
+  );
+}
+
+function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border border-border-subtle rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-bg-card text-sm font-medium text-text-primary cursor-pointer hover:bg-bg-elevated transition-colors"
+      >
+        <span>{title}</span>
+        <ChevronDown size={16} className={cn("text-text-tertiary transition-transform", open && "rotate-180")} />
+      </button>
+      {open && <div className="px-4 py-3 border-t border-border-subtle">{children}</div>}
     </div>
   );
 }
@@ -291,68 +308,56 @@ export default function App() {
 
             {/* Content */}
             {tab === "overview" && (
-              <div className="space-y-6">
-                {/* KPI cards */}
-                <div className={cn("grid gap-3", sim.ret > 0 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3")}>
-                  <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
-                    <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">Cotisations</div>
-                    <div className="text-lg font-bold font-mono text-negative">{fmt(sim.co)}</div>
-                    <div className="text-[11px] text-text-tertiary">{ca > 0 ? Math.round(sim.co / ca * 100) : 0}% du CA</div>
-                  </div>
-                  <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
-                    <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">{sim.is ? "IR + IS" : "Impôt (IR)"}</div>
-                    <div className="text-lg font-bold font-mono text-tax">{fmt((sim.is || 0) + sim.ir)}</div>
-                    <div className="text-[11px] text-text-tertiary">{ca > 0 ? Math.round(((sim.is || 0) + sim.ir) / ca * 100) : 0}% du CA</div>
-                  </div>
-                  <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
-                    <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">Net personnel</div>
-                    <div className="text-lg font-bold font-mono text-text-primary">{fmt(sim.net)}</div>
-                    <div className="text-[11px] text-text-tertiary">{fmt(Math.round(sim.net / 12))}/mois</div>
+              <div className="space-y-4">
+                {/* Résumé principal — le seul endroit avec de la couleur */}
+                <div className="border border-border-subtle rounded-lg p-5">
+                  <div className="flex items-baseline justify-between mb-4">
+                    <span className="text-sm text-text-secondary">Revenu net après impôt</span>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold font-mono text-text-primary">{fmt(sim.net)}</div>
+                      <div className="text-sm text-text-tertiary font-mono">{fmt(Math.round(sim.net / 12))} /mois</div>
+                    </div>
                   </div>
                   {sim.ret > 0 && (
-                    <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
-                      <div className="text-[11px] text-text-tertiary uppercase tracking-wider mb-1">Capital société</div>
+                    <div className="flex items-baseline justify-between pt-3 border-t border-border-subtle">
+                      <span className="text-sm text-text-secondary">Capital conservé en société</span>
                       <div className="text-lg font-bold font-mono text-positive">{fmt(sim.ret)}</div>
-                      <div className="text-[11px] text-text-tertiary">{ca > 0 ? Math.round(sim.ret / ca * 100) : 0}% du CA</div>
                     </div>
                   )}
-                </div>
-
-                {/* Bars */}
-                <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
-                  <BarsViz
-                    items={[
-                      ["Cotisations", sim.co, "#f43f5e"],
-                      [sim.is ? "IS + IR" : "IR", (sim.is || 0) + sim.ir, "#f59e0b"],
-                      ["Net perso", sim.net, "#fafafa"],
-                      ...(sim.ret > 0 ? [["Capitalisé" as string, sim.ret as number, "#22c55e" as string] as [string, number, string]] : []),
-                    ]}
-                    mx={ca}
-                  />
-                </div>
-
-                {/* Detail breakdown */}
-                {sel === "holding" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
-                      <div className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-1.5"><Landmark size={14} /> SASU opérationnelle</div>
-                      {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                    </div>
-                    <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
-                      <div className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-1.5"><Layers size={14} /> Holding</div>
-                      {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                    </div>
+                  {/* Barre de répartition simple */}
+                  <div className="mt-4 flex h-2 rounded-full overflow-hidden bg-bg-elevated">
+                    <div style={{ width: (ca > 0 ? sim.co / ca * 100 : 0) + "%" }} className="bg-text-tertiary" title="Cotisations" />
+                    <div style={{ width: (ca > 0 ? ((sim.is || 0) + sim.ir) / ca * 100 : 0) + "%" }} className="bg-text-tertiary/60" title="Impôts" />
+                    <div style={{ width: (ca > 0 ? sim.net / ca * 100 : 0) + "%" }} className="bg-text-primary" title="Net" />
+                    {sim.ret > 0 && <div style={{ width: (ca > 0 ? sim.ret / ca * 100 : 0) + "%" }} className="bg-positive/60" title="Capital" />}
                   </div>
+                  <div className="flex justify-between text-[10px] text-text-tertiary mt-1.5">
+                    <span>Cotisations {ca > 0 ? Math.round(sim.co / ca * 100) : 0}%</span>
+                    <span>Impôts {ca > 0 ? Math.round(((sim.is || 0) + sim.ir) / ca * 100) : 0}%</span>
+                    <span>Net {ca > 0 ? Math.round(sim.net / ca * 100) : 0}%</span>
+                    {sim.ret > 0 && <span>Capital {ca > 0 ? Math.round(sim.ret / ca * 100) : 0}%</span>}
+                  </div>
+                </div>
+
+                {/* Détail — sections collapsibles */}
+                {sel === "holding" && (
+                  <>
+                    <Section title="SASU opérationnelle">
+                      {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                    </Section>
+                    <Section title="Holding">
+                      {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                    </Section>
+                  </>
                 )}
 
-                <div className="p-4 bg-bg-card rounded-lg border border-border-subtle">
-                  <div className="text-sm font-semibold text-text-secondary mb-3">Détail des calculs</div>
+                <Section title="Détail du calcul">
                   {sim.lines.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                  <div className="flex justify-between py-3 border-t border-text-primary/10 mt-2 text-base font-bold text-text-primary">
+                  <div className="flex justify-between pt-3 mt-1 border-t border-border-subtle text-sm font-bold text-text-primary">
                     <span>Net après impôt</span>
                     <span className="font-mono">{fmt(sim.net)}</span>
                   </div>
-                </div>
+                </Section>
               </div>
             )}
             {tab === "sankey" && <SankeyOverview data={sankeyData} accent={st.accent} />}
