@@ -1,58 +1,85 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { useQueryStates, parseAsInteger, parseAsString, parseAsBoolean, parseAsFloat } from "nuqs";
+import { ChevronDown } from "lucide-react";
 import {
   MICRO_CAP, IS_SEUIL_REDUIT, IS_SEUIL_PLF2026,
   TNS_COEFF, CHARGES_FIXES_SOCIETE, SASU_COEFF_NET,
-  MICRO_BNC_TAUX,
 } from "@/lib/fiscal";
 import {
   simMicro, simTNS_A, simTNS_B, simSASU_A, simSASU_B, simHolding,
   retInfo, mkTNS, mkSASU, mkMicro,
-  fmt, isLabel, MICRO_TAUX_LABEL,
+  fmt, MICRO_TAUX_LABEL,
 } from "@/lib/engine";
 import type { Sim, Line, CotisItem, RetResult, StructConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Header } from "@/components/layout/header";
+import { Sidebar, MobileControls } from "@/components/layout/sidebar";
+import { SankeyOverview } from "@/components/comparison/sankey-overview";
+import { FlowTab } from "@/components/detail/flow-tab";
+import { RepartitionBar, type Segment } from "@/components/simulateur/repartition-bar";
+import { TreemapDetail } from "@/components/simulateur/treemap-detail";
+import { ComparisonMini } from "@/components/simulateur/comparison-mini";
+import { simToSankey } from "@/lib/sankey";
+import { User, FileText, Building2, Landmark, Layers } from "lucide-react";
+import type { ElementType } from "react";
 
-import { TrendingUp, Users, Target, Info } from "lucide-react";
+const STRUCT_ICONS: Record<string, ElementType> = {
+  micro: User,
+  ei: FileText,
+  eurl: Building2,
+  sasu: Landmark,
+  holding: Layers,
+};
 
-import { FlowSimple } from "@/components/flow/flow-simple";
-import { FlowSplit } from "@/components/flow/flow-split";
-import { FlowHoldingA } from "@/components/flow/flow-holding-a";
-import { FlowHoldingB } from "@/components/flow/flow-holding-b";
-
-// --- UI Primitives ---
+// --- Primitives UI ---
 function Bar({ v, mx, c }: { v: number; mx: number; c: string }) {
   const pct = mx > 0 ? Math.min(Math.max(v / mx * 100, 0), 100) : 0;
   return (
-    <div className="w-full h-2 bg-bg-input rounded-full overflow-hidden">
-      <div className="h-full rounded-full transition-all duration-400" style={{ width: pct + "%", background: c }} />
+    <div className="w-full h-1.5 bg-bg-primary rounded-full overflow-hidden">
+      <div className="h-full rounded-full transition-all duration-500" style={{ width: pct + "%", background: c }} />
     </div>
   );
 }
 
 function LI({ d }: { d: Line }) {
-  const c = d.t === "s" ? "text-white" : d.t === "c" ? "text-charge" : d.t === "x" ? "text-tax" : "text-text-primary";
+  const isSolde = d.t === "s";
   return (
-    <div className="flex justify-between py-1 border-b border-[#1a1a3e] text-sm">
-      <span className={cn(c, d.t === "s" && "font-semibold")}>{d.l}</span>
-      <span className={cn(d.a < 0 ? "text-charge" : c, d.t === "s" && "font-semibold", "whitespace-nowrap ml-2")}>
+    <div className={cn("flex justify-between py-2 text-sm", isSolde ? "font-medium text-text-primary" : "text-text-secondary")}>
+      <span>{d.l}</span>
+      <span className={cn("whitespace-nowrap ml-3 font-mono", d.a < 0 && "text-text-tertiary")}>
         {d.a >= 0 ? fmt(d.a) : "- " + fmt(Math.abs(d.a))}
       </span>
     </div>
   );
 }
 
+function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border border-border-subtle rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-bg-card text-sm font-medium text-text-primary cursor-pointer hover:bg-bg-elevated transition-colors"
+      >
+        <span>{title}</span>
+        <ChevronDown size={16} className={cn("text-text-tertiary transition-transform", open && "rotate-180")} />
+      </button>
+      {open && <div className="px-4 py-3 border-t border-border-subtle">{children}</div>}
+    </div>
+  );
+}
+
 function BarsViz({ items, mx }: { items: [string, number, string][]; mx: number }) {
   return (
-    <div>
+    <div className="space-y-2">
       {items.map(([l, v, c], i) => (
-        <div key={i} className="mb-1.5">
-          <div className="flex justify-between text-xs mb-0.5">
+        <div key={i}>
+          <div className="flex justify-between text-xs mb-1">
             <span style={{ color: c }}>{l}</span>
-            <span style={{ color: c }} className="font-semibold">{fmt(v)}</span>
+            <span style={{ color: c }} className="font-semibold font-mono">{fmt(v)}</span>
           </div>
           <Bar v={v} mx={mx} c={c} />
         </div>
@@ -61,111 +88,124 @@ function BarsViz({ items, mx }: { items: [string, number, string][]; mx: number 
   );
 }
 
-function CotisT({ items, accent }: { items: CotisItem[]; accent: string }) {
+function stripEmoji(s: string): string {
+  return s.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FEFF}]/gu, "").trim();
+}
+
+function StatusDot({ status }: { status: string }) {
+  if (status.includes("❌")) return <span className="inline-block w-2 h-2 rounded-full bg-negative" title="Non couvert" />;
+  if (status.includes("⚠")) return <span className="inline-block w-2 h-2 rounded-full bg-tax" title="Partiel" />;
+  if (status.includes("✅✅")) return <span className="inline-block w-2.5 h-2.5 rounded-full bg-positive ring-2 ring-positive/30" title="Excellente couverture" />;
+  if (status.includes("✅")) return <span className="inline-block w-2 h-2 rounded-full bg-positive" title="Couvert" />;
+  return <span className="inline-block w-2 h-2 rounded-full bg-text-tertiary" title="Variable" />;
+}
+
+function CotisInner({ items }: { items: CotisItem[] }) {
   return (
-    <div className="p-3 bg-bg-primary rounded-xl">
-      <div className="text-sm font-semibold mb-1.5" style={{ color: accent }}>🔍 Cotisations</div>
-      <table className="w-full border-collapse text-sm">
-        <tbody>
-          {items.map((it, i) => (
-            <tr key={i}>
-              <td className="py-1 border-b border-bg-detail text-text-muted">{it.n}</td>
-              <td className={cn("py-1 border-b border-bg-detail font-medium text-right w-[70px]", it.a > 0 ? "text-charge" : "text-text-dim")}>
-                {it.a > 0 ? fmt(it.a) : "—"}
-              </td>
-              <td className="py-1 border-b border-bg-detail text-xs">
-                <span className={it.c.startsWith("❌") ? "text-charge" : it.c.startsWith("⚠") ? "text-tax" : "text-capital"}>
-                  {it.c}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <table className="w-full text-sm">
+      <tbody>
+        {items.map((it, i) => (
+          <tr key={i} className="border-b border-border-subtle last:border-0">
+            <td className="py-2.5 text-text-secondary">{stripEmoji(it.n)}</td>
+            <td className={cn("py-2.5 font-mono font-medium text-right w-24", it.a > 0 ? "text-text-primary" : "text-text-tertiary")}>
+              {it.a > 0 ? fmt(it.a) : "—"}
+            </td>
+            <td className="py-2.5 text-center w-8">
+              <StatusDot status={it.c} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
-function RetB({ info }: { info: RetResult }) {
+function RetInner({ info }: { info: RetResult }) {
   return (
-    <div className="p-2.5 bg-bg-primary rounded-xl text-sm text-text-muted">
-      {"👴 Retraite — Pension : "}
-      <strong className="text-white">{"~" + fmt(info.pen) + "/mois"}</strong>
-      {" · Trimestres/an : "}
-      <strong className={info.tr >= 4 ? "text-capital" : "text-tax"}>{info.tr + "/4"}</strong>
-      <br />
-      <span className="text-text-dim">Carrière complète = 43 ans (172 trimestres, né(e) après 1973)</span>
+    <div className="space-y-3 text-sm">
+      <div className="flex justify-between text-text-secondary">
+        <span>Pension mensuelle estimée</span>
+        <span className="font-mono font-medium text-text-primary">~{fmt(info.pen)}/mois</span>
+      </div>
+      <div className="flex justify-between text-text-secondary">
+        <span>Trimestres validés par an</span>
+        <span className="font-mono font-medium text-text-primary">{info.tr}/4</span>
+      </div>
+      <div className="flex justify-between text-text-secondary">
+        <span>Carrière complète</span>
+        <span className="text-text-tertiary">43 ans (172 trimestres, né(e) après 1973)</span>
+      </div>
     </div>
   );
 }
 
 function CapUsage({ type }: { type: string }) {
-  const data: Record<string, { t: string; c: string; i: string[][] }> = {
-    eurl: { t: "💡 Capital dans la société (EURL)", c: "#34d399", i: [["✅ Embaucher / Matériel", "Investissement productif"], ["✅ Dividendes futurs", "Soumis TNS > 10% capital"], ["⚠️ Bourse", "Risque requalification"]] },
-    sasu: { t: "💡 Capital dans la société (SASU)", c: "#34d399", i: [["✅ Embaucher / Matériel", "Investissement productif"], ["✅ Dividendes futurs", "Flat tax 30% SANS cotisations"], ["⚠️ Bourse", "Change l'objet social"]] },
-    holding: { t: "💡 Capital dans la société (Holding)", c: "#34d399", i: [["✅ Bourse / ETF", "Investir à l'IS"], ["✅ Crédit Lombard", "Emprunter sans vendre"], ["✅ SCI / Immobilier", "Via la holding"], ["✅ Prêt CCA", "Remboursement non imposé"], ["🔥 Levier fiscal", "IS 15-25% vs IR 30-45%"]] },
-    ei: { t: "💡 Capital dans l'EI (IS)", c: "#34d399", i: [["✅ Matériel / Trésorerie", "Investissement"], ["⚠️ Patrimoine", "Séparé depuis 2022 mais pas de personnalité morale"]] },
+  const data: Record<string, { t: string; i: [string, string, "ok" | "warn" | "good"][] }> = {
+    eurl: { t: "Utilisation du capital (EURL)", i: [["Embaucher / Matériel", "Investissement productif", "ok"], ["Dividendes futurs", "Soumis TNS > 10% capital", "warn"], ["Bourse", "Risque requalification", "warn"]] },
+    sasu: { t: "Utilisation du capital (SASU)", i: [["Embaucher / Matériel", "Investissement productif", "ok"], ["Dividendes futurs", "Flat tax 30% SANS cotisations", "good"], ["Bourse", "Change l'objet social", "warn"]] },
+    holding: { t: "Utilisation du capital (Holding)", i: [["Bourse / ETF", "Investir à l'IS", "good"], ["Crédit Lombard", "Emprunter sans vendre", "good"], ["SCI / Immobilier", "Via la holding", "good"], ["Prêt CCA", "Remboursement non imposé", "good"], ["Levier fiscal", "IS 15-25% vs IR 30-45%", "good"]] },
+    ei: { t: "Utilisation du capital (EI IS)", i: [["Matériel / Trésorerie", "Investissement", "ok"], ["Patrimoine", "Séparé depuis 2022 mais pas de personnalité morale", "warn"]] },
   };
   const d = data[type];
   if (!d) return null;
   return (
-    <div className="p-3 bg-bg-primary rounded-xl">
-      <div className="text-sm font-semibold mb-1.5" style={{ color: d.c }}>{d.t}</div>
-      {d.i.map((it, i) => (
-        <div key={i} className="text-sm mb-0.5" style={{ color: it[0].startsWith("❌") ? "#ff6b6b" : it[0].startsWith("⚠") ? "#ffa94d" : it[0].startsWith("🔥") ? "#fbbf24" : "#ccc" }}>
-          <strong>{it[0]}</strong>{" — "}<span className="text-text-dim">{it[1]}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ToggleGroup({ options, value, onChange, size = "normal" }: {
-  options: { v: string; l: string; c?: string }[];
-  value: string;
-  onChange: (v: string) => void;
-  size?: "sm" | "normal";
-}) {
-  return (
-    <div className="inline-flex bg-bg-input rounded-md p-0.5 gap-0.5">
-      {options.map(o => (
-        <button
-          key={o.v}
-          onClick={() => onChange(o.v)}
-          className={cn(
-            "rounded-md border-none cursor-pointer font-semibold transition-all duration-200",
-            size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-3 py-1 text-[13px]",
-            value === o.v ? "text-bg-primary shadow-sm" : "text-text-dim hover:text-text-muted"
-          )}
-          style={value === o.v ? { background: o.c || "#c084fc" } : undefined}
-        >
-          {o.l}
-        </button>
-      ))}
+    <div className="p-4 bg-bg-primary rounded-lg border border-border-subtle">
+      <div className="text-sm font-semibold text-text-primary mb-4">{d.t}</div>
+      <div className="space-y-3">
+        {d.i.map((it, i) => (
+          <div key={i} className="flex items-start gap-3">
+            <span className={cn(
+              "inline-block w-2 h-2 rounded-full mt-1.5 shrink-0",
+              it[2] === "good" ? "bg-positive" : it[2] === "warn" ? "bg-tax" : "bg-text-tertiary"
+            )} />
+            <div>
+              <div className="text-sm font-medium text-text-primary">{it[0]}</div>
+              <div className="text-xs text-text-tertiary">{it[1]}</div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
 // --- Main ---
 export default function App() {
-  const [ca, setCa] = useState(100000);
-  const [parts, setParts] = useState(1);
-  const [sel, setSel] = useState<string | null>(null);
-  const [microTab, setMicroTab] = useState("hypo");
-  const [gm, setGm] = useState("A");
-  const [salB, setSalB] = useState(20400);
-  const [mandatM, setMandatM] = useState(6000);
-  const [tab, setTab] = useState("overview");
-  const [regEI, setRegEI] = useState("IS");
-  const [regEURL, setRegEURL] = useState("IS");
-  const [regSASU, setRegSASU] = useState("IS");
-  const [isSeuilEtendu, setIsSeuilEtendu] = useState(false);
+  const [q, setQ] = useQueryStates({
+    ca: parseAsInteger.withDefault(100000),
+    parts: parseAsFloat.withDefault(1),
+    sel: parseAsString.withDefault("micro"),
+    microTab: parseAsString.withDefault("hypo"),
+    gm: parseAsString.withDefault("A"),
+    salB: parseAsInteger.withDefault(20400),
+    mandatM: parseAsInteger.withDefault(6000),
+    tab: parseAsString.withDefault("overview"),
+    regEI: parseAsString.withDefault("IS"),
+    regEURL: parseAsString.withDefault("IS"),
+    regSASU: parseAsString.withDefault("IS"),
+    isSeuilEtendu: parseAsBoolean.withDefault(false),
+  });
+
+  const { ca, parts, sel, microTab, gm, salB, mandatM, tab, regEI, regEURL, regSASU, isSeuilEtendu } = q;
+  const setCa = useCallback((v: number) => setQ({ ca: v }), [setQ]);
+  const setParts = useCallback((v: number) => setQ({ parts: v }), [setQ]);
+  const setGm = useCallback((v: string) => setQ({ gm: v }), [setQ]);
+  const setSalB = useCallback((v: number) => setQ({ salB: v }), [setQ]);
+  const setMandatM = useCallback((v: number) => setQ({ mandatM: v }), [setQ]);
+  const setTab = useCallback((v: string) => setQ({ tab: v }), [setQ]);
+  const setRegEI = useCallback((v: string) => setQ({ regEI: v }), [setQ]);
+  const setRegEURL = useCallback((v: string) => setQ({ regEURL: v }), [setQ]);
+  const setRegSASU = useCallback((v: string) => setQ({ regSASU: v }), [setQ]);
+  const setIsSeuilEtendu = useCallback((v: boolean) => setQ({ isSeuilEtendu: v }), [setQ]);
+  const setMicroTab = useCallback((v: string) => setQ({ microTab: v }), [setQ]);
 
   const isSeuil = isSeuilEtendu ? IS_SEUIL_PLF2026 : IS_SEUIL_REDUIT;
   const mCA = microTab === "real" ? Math.min(ca, MICRO_CAP) : ca;
   const isCapped = ca > MICRO_CAP;
   const maxSalB = Math.max(12000, Math.round((ca - CHARGES_FIXES_SOCIETE) / TNS_COEFF * 0.9));
   const maxMandat = Math.round((ca - CHARGES_FIXES_SOCIETE) / 12);
+  const effSalB = Math.min(salB, maxSalB);
+  const effMandatM = Math.min(mandatM, Math.max(maxMandat, 1000));
 
   const eiCanB = regEI === "IS";
   const eurlCanB = regEURL === "IS";
@@ -174,14 +214,14 @@ export default function App() {
   const S = useMemo(() => ({
     micro: simMicro(mCA, parts, isSeuil),
     ei_A: simTNS_A(ca, parts, regEI === "IS" ? "Rémun. nette" : "Revenu net", isSeuil),
-    ei_B: regEI === "IS" ? simTNS_B(ca, parts, salB, isSeuil) : null,
+    ei_B: regEI === "IS" ? simTNS_B(ca, parts, effSalB, isSeuil) : null,
     eurl_A: simTNS_A(ca, parts, "Rémun. nette", isSeuil),
-    eurl_B: regEURL === "IS" ? simTNS_B(ca, parts, salB, isSeuil) : null,
+    eurl_B: regEURL === "IS" ? simTNS_B(ca, parts, effSalB, isSeuil) : null,
     sasu_A: simSASU_A(ca, parts, isSeuil),
-    sasu_B: regSASU === "IS" ? simSASU_B(ca, parts, salB, isSeuil) : null,
-    hold_A: simHolding(ca, parts, "A", salB, mandatM, isSeuil),
-    hold_B: simHolding(ca, parts, "B", salB, mandatM, isSeuil),
-  }), [ca, parts, mCA, salB, mandatM, regEI, regEURL, regSASU, isSeuil]);
+    sasu_B: regSASU === "IS" ? simSASU_B(ca, parts, effSalB, isSeuil) : null,
+    hold_A: simHolding(ca, parts, "A", effSalB, effMandatM, isSeuil),
+    hold_B: simHolding(ca, parts, "B", effSalB, effMandatM, isSeuil),
+  }), [ca, parts, mCA, effSalB, effMandatM, regEI, regEURL, regSASU, isSeuil]);
 
   function getData(id: string) {
     if (id === "micro") return { net: S.micro.net, ret: 0, dCA: mCA };
@@ -192,355 +232,233 @@ export default function App() {
   }
 
   const structs: StructConfig[] = [
-    { id: "micro", name: "Micro", icon: "🧑‍💻", color: "#2563eb", accent: "#60a5fa", noB: true },
-    { id: "ei", name: "EI " + regEI, icon: "📋", color: "#0891b2", accent: "#22d3ee", noB: !eiCanB },
-    { id: "eurl", name: "EURL " + regEURL, icon: "🏢", color: "#059669", accent: "#34d399", noB: !eurlCanB },
-    { id: "sasu", name: "SASU " + regSASU, icon: "🏛️", color: "#9333ea", accent: "#c084fc", noB: !sasuCanB },
-    { id: "holding", name: "SASU+Holding", icon: "🐟", color: "#d97706", accent: "#fbbf24", noB: false },
+    { id: "micro", name: "Micro", icon: "micro", color: "#2563eb", accent: "#60a5fa", noB: true },
+    { id: "ei", name: "EI " + regEI, icon: "ei", color: "#0891b2", accent: "#2dd4bf", noB: !eiCanB },
+    { id: "eurl", name: "EURL " + regEURL, icon: "eurl", color: "#059669", accent: "#34d399", noB: !eurlCanB },
+    { id: "sasu", name: "SASU " + regSASU, icon: "sasu", color: "#7c3aed", accent: "#a78bfa", noB: !sasuCanB },
+    { id: "holding", name: "SASU+Holding", icon: "holding", color: "#d97706", accent: "#fbbf24", noB: false },
   ];
 
-  const openD = (id: string) => { setSel(sel === id ? null : id); setTab("overview"); };
+  const openD = (id: string) => { setQ({ sel: id, tab: "overview" }); };
 
-  function renderDetail() {
-    if (!sel) return null;
-    const st = structs.find(s => s.id === sel)!;
-    const isB = gm === "B" && !st.noB;
-    let sim: Sim, cotisItems: CotisItem[], retData: RetResult, flowEl: React.ReactNode, regToggle: React.ReactNode = null;
+  const st = structs.find(s => s.id === sel)!;
+  const isB = gm === "B" && !st.noB;
 
-    if (sel === "micro") {
-      sim = S.micro; cotisItems = mkMicro(mCA); retData = retInfo("micro", sim.rev, 0);
-      flowEl = <FlowSimple sim={sim} accent="#60a5fa" icon="🧑‍💻" name="Micro" chargeLabel={MICRO_TAUX_LABEL} />;
-    } else if (sel === "ei") {
-      regToggle = <ToggleGroup options={[{ v: "IR", l: "IR", c: "#22d3ee" }, { v: "IS", l: "IS (depuis 2022)", c: "#f59e0b" }]} value={regEI} onChange={setRegEI} />;
-      sim = (eiCanB && isB && S.ei_B) ? S.ei_B : S.ei_A;
-      cotisItems = mkTNS(isB && eiCanB ? salB : sim.nr); retData = retInfo("tns", isB && eiCanB ? salB : sim.nr, 0);
-      flowEl = (eiCanB && isB) ? <FlowSplit sim={sim} accent="#22d3ee" icon="📋" name="EI IS" capSub="Matériel · Trésorerie" /> : <FlowSimple sim={sim} accent="#22d3ee" icon="📋" name={"EI " + regEI} chargeLabel="TNS ~43%" />;
-    } else if (sel === "eurl") {
-      regToggle = <ToggleGroup options={[{ v: "IR", l: "IR (transparent)", c: "#34d399" }, { v: "IS", l: "IS", c: "#f59e0b" }]} value={regEURL} onChange={setRegEURL} />;
-      sim = (eurlCanB && isB && S.eurl_B) ? S.eurl_B : S.eurl_A;
-      cotisItems = mkTNS(isB && eurlCanB ? salB : sim.nr); retData = retInfo("tns", isB && eurlCanB ? salB : sim.nr, 0);
-      flowEl = (eurlCanB && isB) ? <FlowSplit sim={sim} accent="#34d399" icon="🏢" name="EURL IS" capSub="Embauche · Matériel" /> : <FlowSimple sim={sim} accent="#34d399" icon="🏢" name={"EURL " + regEURL} chargeLabel="TNS ~43%" />;
-    } else if (sel === "sasu") {
-      regToggle = <ToggleGroup options={[{ v: "IR", l: "IR (5 ans max)", c: "#c084fc" }, { v: "IS", l: "IS", c: "#f59e0b" }]} value={regSASU} onChange={setRegSASU} />;
-      sim = (sasuCanB && isB && S.sasu_B) ? S.sasu_B : S.sasu_A;
-      cotisItems = mkSASU(sim.brut || Math.round((isB && sasuCanB ? salB : sim.nAv || 20400) / SASU_COEFF_NET));
-      retData = retInfo("salarie", sim.nAv || salB, sim.brut);
-      flowEl = (sasuCanB && isB) ? <FlowSplit sim={{ ...sim, cotisOnly: sim.co - CHARGES_FIXES_SOCIETE }} accent="#c084fc" icon="🏛️" name="SASU IS" capSub="Div. flat tax 30%" /> : <FlowSimple sim={sim} accent="#c084fc" icon="🏛️" name={"SASU " + regSASU} chargeLabel={regSASU === "IS" ? "~77% du brut" : "~77% (transparent)"} />;
-    } else {
-      sim = isB ? S.hold_B : S.hold_A;
-      cotisItems = mkTNS(isB ? salB : (sim.nr || salB)); retData = retInfo("tns", isB ? salB : (sim.nr || salB), 0);
-      flowEl = isB ? <FlowHoldingB sim={sim} /> : <FlowHoldingA sim={sim} />;
-    }
-
-    const tabItems = [
-      { k: "overview", l: "Synthèse", icon: "📋" },
-      { k: "flow", l: "Flux", icon: "📊" },
-      { k: "cotis", l: "Cotisations", icon: "🔍" },
-    ];
-    if (isB) tabItems.push({ k: "capital", l: "Capital", icon: "💡" });
-
-    return (
-      <div className="border-2 overflow-hidden mb-3.5 bg-bg-card rounded-xl" style={{ borderColor: st.color + "40" }}>
-        <div className="px-4 pt-3.5 pb-0" style={{ background: st.color + "06" }}>
-          <div className="flex justify-between items-center mb-1.5 flex-wrap gap-2">
-            <h2 className="text-xl font-bold m-0" style={{ color: st.accent }}>
-              {st.icon + " " + st.name}
-              <span className="text-[13px] text-text-dim font-normal">
-                {" · Mode " + (st.noB ? "A" : gm)}
-                {regToggle && !st.noB && gm === "B" && " · Capitalise"}
-              </span>
-            </h2>
-            {regToggle && <div>{regToggle}</div>}
-          </div>
-
-          {sel === "micro" && isCapped && (
-            <div className="flex gap-1.5 mb-1.5">
-              <button onClick={e => { e.stopPropagation(); setMicroTab("hypo"); }} className={cn("px-2.5 py-1 rounded-md border-none cursor-pointer font-semibold text-[10px]", microTab === "hypo" ? "bg-solde text-bg-primary" : "bg-bg-input text-text-muted")}>
-                {fmt(ca) + " — Hypothétique"}
-              </button>
-              <button onClick={e => { e.stopPropagation(); setMicroTab("real"); setCa(MICRO_CAP); }} className={cn("px-2.5 py-1 rounded-md border-none cursor-pointer font-semibold text-[10px]", microTab === "real" ? "bg-micro text-white" : "bg-bg-input text-text-muted")}>
-                {fmt(MICRO_CAP) + " — Plafond réel"}
-              </button>
-            </div>
-          )}
-
-          {sel === "holding" && (
-            <div className="py-1.5">
-              <div className="flex justify-between items-baseline mb-0.5">
-                <span className="text-sm text-text-muted">🏛️ Rémun. mandat présidence</span>
-                <span className="text-lg font-bold font-mono" style={{ color: "#c084fc" }}>
-                  {fmt(mandatM) + "/mois"}
-                  <span className="text-[11px] text-text-dim font-normal">{" = " + fmt(mandatM * 12) + "/an"}</span>
-                </span>
-              </div>
-              <input type="range" min={1000} max={Math.max(maxMandat, 2000)} step={500} value={mandatM} onChange={e => setMandatM(+e.target.value)} className="w-full cursor-pointer accent-sasu" />
-            </div>
-          )}
-
-          {isB && (
-            <div className="py-1.5">
-              <div className="flex justify-between items-baseline mb-0.5">
-                <span className="text-sm text-text-muted">💰 Salaire net gérant</span>
-                <span className="text-lg font-bold font-mono" style={{ color: st.accent }}>
-                  {fmt(Math.round(salB / 12)) + "/mois"}
-                  <span className="text-[11px] text-text-dim font-normal">{" = " + fmt(salB) + "/an"}</span>
-                </span>
-              </div>
-              <input type="range" min={6000} max={maxSalB} step={1200} value={salB} onChange={e => setSalB(+e.target.value)} className="w-full cursor-pointer" style={{ accentColor: st.accent }} />
-            </div>
-          )}
-
-          {!st.noB && gm === "B" && ((sel === "ei" && regEI === "IR") || (sel === "eurl" && regEURL === "IR") || (sel === "sasu" && regSASU === "IR")) && (
-            <div className="py-1.5 px-2.5 bg-tax/5 border border-tax/20 rounded-md text-xs text-tax mb-1.5">
-              ⚠️ À l&apos;IR, pas de capitalisation possible — le bénéfice est imposé directement à l&apos;IR. Mode A forcé.
-            </div>
-          )}
-
-          <div className="flex gap-0.5 mt-1 border-b border-[#1a1a3e]">
-            {tabItems.map(t => (
-              <button
-                key={t.k}
-                onClick={() => setTab(t.k)}
-                className={cn(
-                  "flex-1 px-4 py-3 text-sm font-bold border-b-2 border-transparent bg-transparent cursor-pointer transition-colors",
-                  tab === t.k ? "text-white" : "text-text-dim hover:text-text-muted"
-                )}
-                style={tab === t.k ? { borderBottomColor: st.accent } : undefined}
-              >
-                {t.icon + " " + t.l}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="p-4">
-          {tab === "overview" && (
-            <div>
-              {sel === "holding" && (
-                <div className="grid grid-cols-2 gap-2.5 mb-2.5">
-                  <div>
-                    <div className="text-sm font-semibold text-sasu mb-1">🏛️ SASU</div>
-                    {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-holding mb-1">🏢 Holding</div>
-                    {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                  </div>
-                </div>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                <div>
-                  {sim.lines.map((d: Line, i: number) => <LI key={i} d={d} />)}
-                  <div className="flex justify-between py-2 border-t-2 mt-1 text-lg font-bold" style={{ borderColor: st.accent, color: st.accent }}>
-                    <span>💰 Net</span><span>{fmt(sim.net)}</span>
-                  </div>
-                  {sim.ret > 0 && (
-                    <div className="flex justify-between py-1 text-[15px] font-bold text-capital">
-                      <span>📈 Dans la société</span><span>{fmt(sim.ret)}</span>
-                    </div>
-                  )}
-                </div>
-                <BarsViz
-                  items={[
-                    ["URSSAF", sim.co, "#ff6b6b"],
-                    [sim.is ? "IS + IR" : "IR", (sim.is || 0) + sim.ir, "#ffa94d"],
-                    ["Net perso", sim.net, st.accent],
-                    ...(sim.ret > 0 ? [["Dans la société" as string, sim.ret as number, "#34d399" as string] as [string, number, string]] : []),
-                  ]}
-                  mx={ca}
-                />
-              </div>
-            </div>
-          )}
-          {tab === "flow" && flowEl}
-          {tab === "cotis" && (
-            <div className="grid gap-2.5">
-              <CotisT items={cotisItems} accent={st.accent} />
-              <RetB info={retData} />
-            </div>
-          )}
-          {tab === "capital" && isB && <CapUsage type={sel === "holding" ? "holding" : sel} />}
-        </div>
-      </div>
-    );
+  // Compute current sim data
+  let sim: Sim, cotisItems: CotisItem[], retData: RetResult;
+  if (sel === "micro") {
+    sim = S.micro; cotisItems = mkMicro(mCA); retData = retInfo("micro", sim.rev, 0);
+  } else if (sel === "ei") {
+    sim = (eiCanB && isB && S.ei_B) ? S.ei_B : S.ei_A;
+    cotisItems = mkTNS(isB && eiCanB ? effSalB : sim.nr); retData = retInfo("tns", isB && eiCanB ? effSalB : sim.nr, 0);
+  } else if (sel === "eurl") {
+    sim = (eurlCanB && isB && S.eurl_B) ? S.eurl_B : S.eurl_A;
+    cotisItems = mkTNS(isB && eurlCanB ? effSalB : sim.nr); retData = retInfo("tns", isB && eurlCanB ? effSalB : sim.nr, 0);
+  } else if (sel === "sasu") {
+    sim = (sasuCanB && isB && S.sasu_B) ? S.sasu_B : S.sasu_A;
+    cotisItems = mkSASU(sim.brut || Math.round((isB && sasuCanB ? effSalB : sim.nAv || 20400) / SASU_COEFF_NET));
+    retData = retInfo("salarie", sim.nAv || effSalB, sim.brut);
+  } else {
+    sim = isB ? S.hold_B : S.hold_A;
+    cotisItems = mkTNS(isB ? effSalB : (sim.nr || effSalB)); retData = retInfo("tns", isB ? effSalB : (sim.nr || effSalB), 0);
   }
 
+  const sankeyData = simToSankey(sim, sel, isB);
+
+  const tabItems = [
+    { k: "overview", l: "Synthèse" },
+    { k: "sankey", l: "Répartition" },
+    { k: "flow", l: "Flux" },
+    { k: "cotis", l: "Cotisations" },
+  ];
+  if (isB) tabItems.push({ k: "capital", l: "Capital" });
+
   return (
-    <TooltipProvider>
-      <div className="min-h-screen p-4 md:px-6">
-        <div className="max-w-[1300px] mx-auto">
-          {/* Header */}
-          <div className="text-center mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-white">Simulateur Freelance Dev</h1>
-            <p className="text-text-dim text-xs mt-1">Comparez 5 statuts · Barème 2026 · Ajustez CA, régime fiscal et stratégie</p>
-          </div>
+    <div className="flex flex-col min-h-screen">
+      <Header structs={structs} sel={sel} onSelect={openD} getData={getData} icons={STRUCT_ICONS} />
 
-          {/* Controls */}
-          <div className="mb-4 bg-bg-card border-2 border-[#1a1a3e] rounded-xl">
-            <div className="p-4 md:p-5">
-              {/* CA Slider */}
-              <div className="mb-4">
-                <div className="flex justify-between items-baseline mb-1">
-                  <span className="text-xs text-text-muted flex items-center gap-1.5">
-                    <TrendingUp size={14} className="text-sasu" />
-                    CA annuel HT
-                  </span>
-                  <span className="text-2xl md:text-3xl font-bold text-white font-mono">{fmt(ca)}</span>
-                </div>
-                <input
-                  type="range" min={30000} max={500000} step={5000}
-                  value={ca} onChange={e => setCa(+e.target.value)}
-                  className="w-full cursor-pointer accent-sasu"
-                  aria-label="Chiffre d'affaires annuel"
-                />
-                <div className="flex justify-between text-[10px] text-text-dim mt-0.5">
-                  <span>30k</span><span>100k</span><span>200k</span><span>300k</span><span>500k</span>
-                </div>
-                {isCapped && <div className="mt-1 text-[11px] text-tax">{"⚠️ Micro plafonné à " + fmt(MICRO_CAP)}</div>}
-              </div>
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+        <Sidebar
+          ca={ca} setCa={setCa} parts={parts} setParts={setParts}
+          gm={gm} setGm={setGm} isSeuilEtendu={isSeuilEtendu} setIsSeuilEtendu={setIsSeuilEtendu}
+          isCapped={isCapped} sel={sel}
+          regEI={regEI} setRegEI={setRegEI} regEURL={regEURL} setRegEURL={setRegEURL}
+          regSASU={regSASU} setRegSASU={setRegSASU}
+          salB={salB} setSalB={setSalB} mandatM={mandatM} setMandatM={setMandatM}
+          maxSalB={maxSalB} maxMandat={maxMandat} isB={isB}
+        />
 
-              <div className="h-px bg-border-custom mb-3" />
+        <MobileControls
+          ca={ca} setCa={setCa} parts={parts} setParts={setParts}
+          gm={gm} setGm={setGm} isSeuilEtendu={isSeuilEtendu} setIsSeuilEtendu={setIsSeuilEtendu}
+          isCapped={isCapped} sel={sel}
+        />
 
-              {/* Controls row */}
-              <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] gap-4 md:gap-5 items-start">
-                <div>
-                  <div className="text-[13px] text-text-muted mb-1.5 flex items-center gap-1.5">
-                    <Users size={14} className="text-sasu" />
-                    Parts IR
-                  </div>
-                  <div className="flex gap-1">
-                    {[1, 1.5, 2, 2.5, 3].map(p => (
-                      <button
-                        key={p}
-                        onClick={() => setParts(p)}
-                        className={cn(
-                          "px-2.5 py-1 rounded-md border-none cursor-pointer font-semibold text-[13px] transition-all",
-                          parts === p ? "bg-sasu text-bg-primary" : "bg-bg-input text-text-muted hover:text-white"
-                        )}
-                      >
-                        {p}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="text-[10px] text-text-dim mt-1">1=célib · 2=couple · +0.5/enfant</div>
-                </div>
-
-                <div className="text-center">
-                  <div className="text-[13px] text-text-muted mb-1.5 flex items-center justify-center gap-1.5">
-                    <Target size={14} className="text-sasu" />
-                    Stratégie
-                  </div>
-                  <div className="inline-flex gap-1">
-                    <button
-                      onClick={() => setGm("A")}
-                      className={cn(
-                        "px-3.5 py-1 rounded-md border-none cursor-pointer font-semibold text-[13px] transition-all",
-                        gm === "A" ? "bg-capital text-bg-primary" : "bg-bg-input text-text-muted hover:text-white"
-                      )}
-                    >
-                      A — Tout en salaire
-                    </button>
-                    <button
-                      onClick={() => setGm("B")}
-                      className={cn(
-                        "px-3.5 py-1 rounded-md border-none cursor-pointer font-semibold text-[13px] transition-all",
-                        gm === "B" ? "bg-solde text-bg-primary" : "bg-bg-input text-text-muted hover:text-white"
-                      )}
-                    >
-                      B — Capitaliser
-                    </button>
-                  </div>
-                  <div className="text-[10px] text-text-dim mt-1">B = salaire choisi + capital en société (IS requis)</div>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-[13px] text-text-muted mb-1.5">Seuil IS 15%</div>
-                  <ToggleGroup
-                    options={[
-                      { v: "standard", l: "≤ " + fmt(IS_SEUIL_REDUIT), c: "#34d399" },
-                      { v: "plf2026", l: "≤ " + fmt(IS_SEUIL_PLF2026), c: "#f59e0b" },
-                    ]}
-                    value={isSeuilEtendu ? "plf2026" : "standard"}
-                    onChange={v => setIsSeuilEtendu(v === "plf2026")}
-                    size="sm"
-                  />
-                  {isSeuilEtendu && (
-                    <div className="text-[9px] text-solde mt-1 leading-snug max-w-[220px] ml-auto">
-                      <a href="https://www.assemblee-nationale.fr/dyn/17/amendements/1906A/AN/2531" target="_blank" rel="noopener noreferrer" className="text-solde underline">
-                        Amendement I-2531
-                      </a>{" "}— voté en 1ère lecture (oct. 2025). Passage au Sénat puis promulgation attendue fin 2026.
-                    </div>
-                  )}
-                  {gm === "A" && <div className="text-[9px] text-text-dim mt-0.5 text-right">Effet visible en mode B uniquement</div>}
-                </div>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+          <div className="max-w-[1000px] mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                {(() => { const Icon = STRUCT_ICONS[st.id]; return Icon ? <Icon size={18} className="text-text-tertiary" /> : null; })()}
+                {st.name}
+                <span className="text-sm text-text-tertiary font-normal">
+                </span>
+              </h2>
+              <div className="text-sm font-mono text-text-secondary">
+                {fmt(sim.net)}<span className="text-text-tertiary"> /an</span>
               </div>
             </div>
-          </div>
 
-          {/* Structure Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 mb-4">
-            {structs.map(st => {
-              const d = getData(st.id);
-              const total = d.net + d.ret;
-              const showB = gm === "B" && !st.noB;
-              return (
-                <div
-                  key={st.id}
-                  onClick={() => openD(st.id)}
+            {/* Tabs */}
+            <div className="flex gap-0 border-b border-border-subtle mb-6">
+              {tabItems.map(t => (
+                <button
+                  key={t.k}
+                  onClick={() => setTab(t.k)}
                   className={cn(
-                    "cursor-pointer transition-all duration-300 relative border-2 rounded-xl hover:scale-[1.02]",
-                    sel === st.id ? "bg-bg-card-hover" : "bg-bg-card"
+                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer",
+                    tab === t.k
+                      ? "text-text-primary border-text-primary"
+                      : "text-text-tertiary border-transparent hover:text-text-secondary"
                   )}
-                  style={{
-                    borderColor: sel === st.id ? st.color : "#1a1a3e",
-                    ...(sel === st.id ? { background: st.color + "15" } : {}),
-                  }}
                 >
-                  <div className="p-3">
-                    {st.id === "micro" && isCapped && microTab === "real" && (
-                      <span className="absolute -top-2 left-1.5 bg-charge text-white text-[8px] font-bold px-1.5 py-0.5 rounded">PLAFONNÉ</span>
-                    )}
-                    {st.id === "micro" && isCapped && microTab === "hypo" && (
-                      <span className="absolute -top-2 left-1.5 bg-solde text-bg-primary text-[8px] font-bold px-1.5 py-0.5 rounded">FICTIF</span>
-                    )}
-                    {showB && (
-                      <span className="absolute -top-2 right-1.5 bg-solde text-bg-primary text-[8px] font-bold px-1.5 py-0.5 rounded">MODE B</span>
-                    )}
-                    {st.noB && gm === "B" && (
-                      <span className="absolute -top-2 right-1.5 bg-text-dim text-white text-[8px] font-bold px-1.5 py-0.5 rounded">{st.id === "micro" ? "MICRO" : "IR"}</span>
-                    )}
-                    <div className="text-xl mb-0.5">{st.icon}</div>
-                    <div className="font-semibold text-xs mb-1.5" style={{ color: st.accent }}>{st.name}</div>
-                    <div className="text-[22px] font-bold text-white font-mono">{fmt(d.net)}</div>
-                    <div className="text-[10px] text-text-muted mb-0.5">{d.ret > 0 ? "net perso/an" : "net après IR/an"}</div>
-                    <div className="text-[13px]">
-                      <span className="font-semibold font-mono" style={{ color: st.accent }}>{fmt(Math.round(d.net / 12))}</span>
-                      <span className="text-text-dim">/mois</span>
-                    </div>
-                    {d.ret > 0 && (
-                      <div className="mt-1 py-0.5 px-1.5 bg-capital/5 border border-capital/15 rounded text-[10px] text-capital">
-                        {"+ " + fmt(d.ret) + " dans la société"}
+                  {t.l}
+                </button>
+              ))}
+            </div>
+
+            {/* Content */}
+            {tab === "overview" && (() => {
+              const pCo = ca > 0 ? Math.round(sim.co / ca * 100) : 0;
+              const pIr = ca > 0 ? Math.round(((sim.is || 0) + sim.ir) / ca * 100) : 0;
+              const pNet = ca > 0 ? Math.round(sim.net / ca * 100) : 0;
+              const pRet = ca > 0 && sim.ret > 0 ? Math.round(sim.ret / ca * 100) : 0;
+              const totalCharges = sim.co + (sim.is || 0) + sim.ir;
+
+              return (
+                <div className="space-y-4">
+                  {/* Résumé + comparaison côte à côte */}
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4">
+                    {/* Gauche : comparaison des statuts */}
+                    <div className="border border-border-subtle rounded-lg overflow-hidden">
+                      <div className="px-4 py-3 bg-bg-card text-sm font-medium text-text-primary border-b border-border-subtle">
+                        Comparer les statuts
                       </div>
-                    )}
-                    <div className="mt-1.5 mb-0.5">
-                      <Bar v={total} mx={ca} c={st.accent} />
+                      <div className="p-2">
+                        <ComparisonMini
+                          rows={structs.map(s => ({
+                            struct: s,
+                            icon: STRUCT_ICONS[s.id],
+                            ...getData(s.id),
+                            ca: s.id === "micro" ? mCA : ca,
+                          }))}
+                          selectedId={sel}
+                          onSelect={openD}
+                        />
+                      </div>
                     </div>
-                    <div className="text-[9px] text-text-dim">{d.dCA > 0 ? Math.round(total / d.dCA * 100) : 0}% conservé</div>
+
+                    {/* Droite : résumé chiffré + bar chart */}
+                    <div className="border border-border-subtle rounded-lg p-5 min-w-[340px]">
+                      <div className="flex justify-between text-sm text-text-secondary pb-3 border-b border-border-subtle">
+                        <span>CA HT</span>
+                        <span className="font-mono">{fmt(ca)}</span>
+                      </div>
+                      <div className="flex items-baseline justify-between py-4">
+                        <span className="text-sm text-text-secondary">Net après impôt</span>
+                        <div className="text-right">
+                          <div className="text-3xl font-bold font-mono text-text-primary">{fmt(sim.net)}</div>
+                          <div className="text-sm text-text-tertiary font-mono">{fmt(Math.round(sim.net / 12))} /mois</div>
+                        </div>
+                      </div>
+                      {sim.ret > 0 && (
+                        <div className="flex items-baseline justify-between py-3 border-t border-border-subtle">
+                          <span className="text-sm text-text-secondary">Capital en société</span>
+                          <div className="text-lg font-bold font-mono text-positive">{fmt(sim.ret)}</div>
+                        </div>
+                      )}
+                      <div className="mt-4">
+                        <RepartitionBar
+                          segments={[
+                            { key: "cotisations", label: "Cotisations", amount: sim.co, percent: pCo, color: "#71717a", monthly: Math.round(sim.co / 12) },
+                            { key: "impots", label: "Impôts", amount: (sim.is || 0) + sim.ir, percent: pIr, color: "#52525b", monthly: Math.round(((sim.is || 0) + sim.ir) / 12) },
+                            { key: "net", label: "Net perso", amount: sim.net, percent: pNet, color: "#e4e4e7", monthly: Math.round(sim.net / 12) },
+                            ...(pRet > 0 ? [{ key: "capital", label: "Capital", amount: sim.ret, percent: pRet, color: "#22c55e", monthly: Math.round(sim.ret / 12) } as Segment] : []),
+                          ]}
+                          ca={ca}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sections collapsibles détail */}
+                  {sel === "holding" && (
+                    <>
+                      <Section title="SASU opérationnelle">
+                        {sim.sasuL.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                      </Section>
+                      <Section title="Holding">
+                        {sim.holdL.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                      </Section>
+                    </>
+                  )}
+
+                  <Section title="Détail du calcul">
+                    {sim.lines.map((d: Line, i: number) => <LI key={i} d={d} />)}
+                    <div className="flex justify-between pt-3 mt-1 border-t border-border-subtle text-sm font-bold text-text-primary">
+                      <span>Net après impôt</span>
+                      <span className="font-mono">{fmt(sim.net)}</span>
+                    </div>
+                  </Section>
+
+                  <div className="flex justify-between text-xs text-text-tertiary px-1">
+                    <span>Total prélevé : {fmt(totalCharges)} ({ca > 0 ? Math.round(totalCharges / ca * 100) : 0}% du CA)</span>
+                    <span>Conservé : {fmt(sim.net + (sim.ret || 0))} ({ca > 0 ? Math.round((sim.net + (sim.ret || 0)) / ca * 100) : 0}%)</span>
                   </div>
                 </div>
               );
-            })}
+            })()}
+            {tab === "sankey" && (
+              <div className="space-y-6">
+                <SankeyOverview data={sankeyData} accent={st.accent} />
+                <TreemapDetail sim={sim} cotisItems={cotisItems} ca={ca} sel={sel} isB={isB} />
+              </div>
+            )}
+            {tab === "flow" && (
+              <FlowTab
+                sel={sel} sim={sim} isB={isB} accent={st.accent}
+                regEI={regEI} regEURL={regEURL} regSASU={regSASU}
+                eiCanB={eiCanB} eurlCanB={eurlCanB} sasuCanB={sasuCanB}
+              />
+            )}
+            {tab === "cotis" && (
+              <div className="space-y-4">
+                {/* Résumé cotisations */}
+                <div className="border border-border-subtle rounded-lg p-5">
+                  <div className="flex justify-between items-baseline pb-3 border-b border-border-subtle">
+                    <span className="text-sm text-text-secondary">Total cotisations sociales</span>
+                    <span className="text-2xl font-bold font-mono text-text-primary">{fmt(cotisItems.reduce((s, c) => s + c.a, 0))}</span>
+                  </div>
+                  <div className="flex justify-between items-baseline pt-3">
+                    <span className="text-sm text-text-secondary">Retraite estimée</span>
+                    <div className="text-right">
+                      <span className="text-lg font-bold font-mono text-text-primary">~{fmt(retData.pen)}/mois</span>
+                      <div className="text-[11px] text-text-tertiary">{retData.tr}/4 trimestres validés/an</div>
+                    </div>
+                  </div>
+                </div>
+                <Section title="Détail des cotisations">
+                  <CotisInner items={cotisItems} />
+                </Section>
+                <Section title="Retraite" defaultOpen={false}>
+                  <RetInner info={retData} />
+                </Section>
+              </div>
+            )}
+            {tab === "capital" && isB && <CapUsage type={sel === "holding" ? "holding" : sel} />}
           </div>
-
-          {/* Detail */}
-          {renderDetail()}
-
-          {/* Disclaimer */}
-          <div className="bg-bg-card border-2 border-[#1a1a3e] rounded-xl p-2.5 text-[10px] text-text-dim leading-relaxed">
-              {"⚠️ Barème 2026. Simulation simplifiée. Micro BNC (abattement 34%). TNS ~43%, charges SASU ~77%. IS : 15% ≤ " + fmt(isSeuil) + ", 25% au-delà. EI peut opter IS depuis 2022. SASU peut opter IR (5 ans max). Carrière complète = 43 ans. Valider avec un expert-comptable."}
-          </div>
-        </div>
+        </main>
       </div>
-    </TooltipProvider>
+    </div>
   );
 }

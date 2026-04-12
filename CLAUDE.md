@@ -17,11 +17,24 @@ npm run start   # Serveur production
 ## Architecture
 
 ```
-app/layout.tsx          # Fonts (next/font/google) + metadata
-app/page.tsx            # Server component → importe <App />
-app/globals.css         # Reset minimal
-components/simulateur.tsx  # Composant principal ("use client", ~500 lignes)
-lib/fiscal.ts           # Constantes fiscales 2026 centralisées
+app/layout.tsx                    # Fonts (next/font/google) + metadata + NuqsAdapter
+app/page.tsx                      # Server component → <Suspense><App /></Suspense>
+app/globals.css                   # Tailwind v4 + CSS variables couleurs
+
+components/simulateur/index.tsx   # Composant principal "use client" (~460 lignes)
+components/layout/                # Header, Sidebar
+components/comparison/            # Sankey, StructureCard
+components/detail/                # FlowTab
+components/flow/                  # Custom nodes/edges @xyflow
+components/ui/                    # shadcn components
+
+lib/fiscal.ts                     # Constantes fiscales 2026 centralisées
+lib/engine.ts                     # Fonctions de calcul pures (zéro side effects)
+lib/sankey.ts                     # Transformations SimResult → Sankey/Treemap
+lib/types.ts                      # Types TypeScript (SimResult, Line, etc.)
+lib/utils.ts                      # Utilitaires (fmt, cn)
+
+hooks/use-animated-number.ts      # Hook animation numérique
 ```
 
 ### `lib/fiscal.ts` — Constantes fiscales 2026
@@ -32,22 +45,13 @@ Toutes les constantes sont extraites ici pour faciliter les mises à jour annuel
 - IS : seuil standard (42 500 €) + seuil PLF 2026 (100 000 €, toggle UI)
 - Seuils trimestres retraite
 
-### `components/simulateur.tsx` — Composant principal
+### `lib/engine.ts` — Moteur fiscal
 
-Organisé en couches :
-
-1. **Moteur fiscal** — Fonctions de calcul pures :
-   - `calcIR(revenuNet, parts)` : barème progressif IR 2026 avec quotient familial
-   - `calcIS(profit, seuil)` : IS 15%/25% avec seuil paramétrique
-   - `simMicro`, `simTNS_A/B`, `simSASU_A/B`, `simHolding` : simulateurs par statut
-   - Mode A = tout en salaire, Mode B = capitalisation (IS requis)
-
-2. **Visualisation SVG** — Diagrammes de flux animés (CSS dash-array) :
-   - `FlowSimple`, `FlowSplitG`, `FlowHoldingA/B`
-
-3. **Composants UI** — `Bar`, `LI`, `BarsViz`, `Toggle`, `CotisT`, `RetB`, `CapUsage`
-
-4. **App** — State, orchestration des sims, rendu des cards + détail
+Fonctions de calcul pures :
+- `calcIR(revenuNet, parts)` : barème progressif IR 2026 avec quotient familial
+- `calcIS(profit, seuil)` : IS 15%/25% avec seuil paramétrique
+- `simMicro`, `simTNS_A/B`, `simSASU_A/B`, `simHolding` : simulateurs par statut
+- Mode A = tout en salaire, Mode B = capitalisation (IS requis)
 
 ## Conventions
 
@@ -57,3 +61,13 @@ Organisé en couches :
 - Chaque line a un type `t` : `"n"` neutre, `"s"` solde, `"c"` charge, `"x"` impôt
 - Fonts via CSS variables : `var(--font-jetbrains)`, `var(--font-space-grotesk)`
 - Micro-entreprise = BNC (abattement 34%), pas BIC
+- Commits in English
+
+## BMAD Method
+
+This project uses [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) (v6.3.0) for structured AI-driven development.
+
+- **Project context** : `_bmad-output/project-context.md` — stack, conventions, domain rules
+- **Track** : Quick Flow (tech-spec → stories → implementation)
+- **Agents** : `bmad-help` (guidance), `bmad-agent-pm` (stories), `bmad-agent-dev` (implementation), `bmad-agent-architect` (technical decisions)
+- **Workflows** : `bmad-create-story` → `bmad-dev-story`, `bmad-code-review`, `bmad-check-implementation-readiness`
