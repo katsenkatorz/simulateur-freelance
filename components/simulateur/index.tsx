@@ -300,7 +300,6 @@ export default function App() {
                 {(() => { const Icon = STRUCT_ICONS[st.id]; return Icon ? <Icon size={18} className="text-text-tertiary" /> : null; })()}
                 {st.name}
                 <span className="text-sm text-text-tertiary font-normal">
-                  {!st.noB && gm === "B" ? " · Capitalisation" : ""}
                 </span>
               </h2>
               <div className="text-sm font-mono text-text-secondary">
