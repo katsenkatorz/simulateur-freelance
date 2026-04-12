@@ -204,6 +204,8 @@ export default function App() {
   const isCapped = ca > MICRO_CAP;
   const maxSalB = Math.max(12000, Math.round((ca - CHARGES_FIXES_SOCIETE) / TNS_COEFF * 0.9));
   const maxMandat = Math.round((ca - CHARGES_FIXES_SOCIETE) / 12);
+  const effSalB = Math.min(salB, maxSalB);
+  const effMandatM = Math.min(mandatM, Math.max(maxMandat, 1000));
 
   const eiCanB = regEI === "IS";
   const eurlCanB = regEURL === "IS";
@@ -212,14 +214,14 @@ export default function App() {
   const S = useMemo(() => ({
     micro: simMicro(mCA, parts, isSeuil),
     ei_A: simTNS_A(ca, parts, regEI === "IS" ? "Rémun. nette" : "Revenu net", isSeuil),
-    ei_B: regEI === "IS" ? simTNS_B(ca, parts, salB, isSeuil) : null,
+    ei_B: regEI === "IS" ? simTNS_B(ca, parts, effSalB, isSeuil) : null,
     eurl_A: simTNS_A(ca, parts, "Rémun. nette", isSeuil),
-    eurl_B: regEURL === "IS" ? simTNS_B(ca, parts, salB, isSeuil) : null,
+    eurl_B: regEURL === "IS" ? simTNS_B(ca, parts, effSalB, isSeuil) : null,
     sasu_A: simSASU_A(ca, parts, isSeuil),
-    sasu_B: regSASU === "IS" ? simSASU_B(ca, parts, salB, isSeuil) : null,
-    hold_A: simHolding(ca, parts, "A", salB, mandatM, isSeuil),
-    hold_B: simHolding(ca, parts, "B", salB, mandatM, isSeuil),
-  }), [ca, parts, mCA, salB, mandatM, regEI, regEURL, regSASU, isSeuil]);
+    sasu_B: regSASU === "IS" ? simSASU_B(ca, parts, effSalB, isSeuil) : null,
+    hold_A: simHolding(ca, parts, "A", effSalB, effMandatM, isSeuil),
+    hold_B: simHolding(ca, parts, "B", effSalB, effMandatM, isSeuil),
+  }), [ca, parts, mCA, effSalB, effMandatM, regEI, regEURL, regSASU, isSeuil]);
 
   function getData(id: string) {
     if (id === "micro") return { net: S.micro.net, ret: 0, dCA: mCA };
@@ -248,17 +250,17 @@ export default function App() {
     sim = S.micro; cotisItems = mkMicro(mCA); retData = retInfo("micro", sim.rev, 0);
   } else if (sel === "ei") {
     sim = (eiCanB && isB && S.ei_B) ? S.ei_B : S.ei_A;
-    cotisItems = mkTNS(isB && eiCanB ? salB : sim.nr); retData = retInfo("tns", isB && eiCanB ? salB : sim.nr, 0);
+    cotisItems = mkTNS(isB && eiCanB ? effSalB : sim.nr); retData = retInfo("tns", isB && eiCanB ? effSalB : sim.nr, 0);
   } else if (sel === "eurl") {
     sim = (eurlCanB && isB && S.eurl_B) ? S.eurl_B : S.eurl_A;
-    cotisItems = mkTNS(isB && eurlCanB ? salB : sim.nr); retData = retInfo("tns", isB && eurlCanB ? salB : sim.nr, 0);
+    cotisItems = mkTNS(isB && eurlCanB ? effSalB : sim.nr); retData = retInfo("tns", isB && eurlCanB ? effSalB : sim.nr, 0);
   } else if (sel === "sasu") {
     sim = (sasuCanB && isB && S.sasu_B) ? S.sasu_B : S.sasu_A;
-    cotisItems = mkSASU(sim.brut || Math.round((isB && sasuCanB ? salB : sim.nAv || 20400) / SASU_COEFF_NET));
-    retData = retInfo("salarie", sim.nAv || salB, sim.brut);
+    cotisItems = mkSASU(sim.brut || Math.round((isB && sasuCanB ? effSalB : sim.nAv || 20400) / SASU_COEFF_NET));
+    retData = retInfo("salarie", sim.nAv || effSalB, sim.brut);
   } else {
     sim = isB ? S.hold_B : S.hold_A;
-    cotisItems = mkTNS(isB ? salB : (sim.nr || salB)); retData = retInfo("tns", isB ? salB : (sim.nr || salB), 0);
+    cotisItems = mkTNS(isB ? effSalB : (sim.nr || effSalB)); retData = retInfo("tns", isB ? effSalB : (sim.nr || effSalB), 0);
   }
 
   const sankeyData = simToSankey(sim, sel, isB);
@@ -275,7 +277,7 @@ export default function App() {
     <div className="flex flex-col min-h-screen">
       <Header structs={structs} sel={sel} onSelect={openD} getData={getData} icons={STRUCT_ICONS} />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
         <Sidebar
           ca={ca} setCa={setCa} parts={parts} setParts={setParts}
           gm={gm} setGm={setGm} isSeuilEtendu={isSeuilEtendu} setIsSeuilEtendu={setIsSeuilEtendu}
@@ -289,7 +291,7 @@ export default function App() {
         <MobileControls
           ca={ca} setCa={setCa} parts={parts} setParts={setParts}
           gm={gm} setGm={setGm} isSeuilEtendu={isSeuilEtendu} setIsSeuilEtendu={setIsSeuilEtendu}
-          isCapped={isCapped}
+          isCapped={isCapped} sel={sel}
         />
 
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
