@@ -139,6 +139,16 @@ export function Sidebar({
             </button>
           ))}
         </div>
+        {isSeuilEtendu && (
+          <div className="mt-2 p-2.5 bg-bg-elevated/50 rounded-md">
+            <p className="text-[10px] text-text-tertiary leading-relaxed">
+              <a href="https://www.assemblee-nationale.fr/dyn/17/amendements/1906A/AN/2531" target="_blank" rel="noopener noreferrer" className="underline hover:text-text-secondary">
+                Amendement I-2531
+              </a>
+              {" "}— voté en 1ère lecture (oct. 2025). Non promulgué à ce jour. Le seuil IS à taux réduit passerait de 42 500 € à 100 000 €.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Separator — params spécifiques au statut */}
