@@ -58,7 +58,9 @@ export function TreemapDetail({ sim, cotisItems, ca, sel, isB }: TreemapDetailPr
     nodes.push({ name: "Capital société", size: sim.ret, fill: "#22c55e", category: "Capital", detail: "Restant dans la structure" });
   }
 
-  const data = nodes.map(n => ({ ...n, size: Math.max(1, n.size) }));
+  const data = nodes
+    .filter(n => n.name && Number.isFinite(n.size) && n.size > 0)
+    .map(n => ({ ...n, size: Math.max(1, n.size) }));
 
   // Build chart config
   const chartConfig: ChartConfig = {};
@@ -67,12 +69,12 @@ export function TreemapDetail({ sim, cotisItems, ca, sel, isB }: TreemapDetailPr
   });
 
   return (
-    <ChartContainer config={chartConfig} className="h-[200px] w-full aspect-auto">
+    <ChartContainer config={chartConfig} className="h-[200px] w-full aspect-auto [&_.recharts-wrapper]:!bg-transparent [&_.recharts-surface]:!bg-transparent">
       <Treemap
         data={data}
         dataKey="size"
         nameKey="name"
-        stroke="#09090b"
+        stroke="#18181b"
         animationDuration={600}
         content={<CustomContent />}
       >
@@ -108,12 +110,23 @@ export function TreemapDetail({ sim, cotisItems, ca, sel, isB }: TreemapDetailPr
   );
 }
 
+function isLightColor(hex: string): boolean {
+  const c = hex.replace("#", "");
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+}
+
 function CustomContent(props: any) {
-  const { x, y, width, height, name, fill, size } = props;
-  if (width < 4 || height < 4) return null;
+  const { x, y, width, height, name, fill, size, depth } = props;
+  if (width < 4 || height < 4 || !name || depth === 0) return null;
 
   const showName = width > 50 && height > 24;
-  const showAmount = width > 70 && height > 36;
+  const showAmount = width > 70 && height > 36 && Number.isFinite(size);
+  const light = isLightColor(fill || "#27272a");
+  const textColor = light ? "#18181b" : "#fafafa";
+  const subColor = light ? "#3f3f46" : "rgba(255,255,255,0.7)";
 
   return (
     <g>
@@ -133,7 +146,8 @@ function CustomContent(props: any) {
           y={y + (showAmount ? height / 2 - 7 : height / 2)}
           textAnchor="middle"
           dominantBaseline="central"
-          fill="#09090b"
+          fill={textColor}
+          stroke="none"
           fontSize={width > 120 ? 11 : 9}
           fontWeight={600}
           fontFamily="var(--font-sans)"
@@ -147,11 +161,11 @@ function CustomContent(props: any) {
           y={y + height / 2 + 7}
           textAnchor="middle"
           dominantBaseline="central"
-          fill="#09090b"
+          fill={subColor}
+          stroke="none"
           fontSize={width > 120 ? 11 : 9}
           fontWeight={500}
           fontFamily="var(--font-mono)"
-          opacity={0.7}
         >
           {fmt(size)}
         </text>

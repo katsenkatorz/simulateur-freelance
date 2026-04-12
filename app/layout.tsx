@@ -19,7 +19,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Simulateur Freelance Dev",
+  title: "Simulateur Freelance — Comparateur fiscal",
   description:
     "Comparez 5 statuts juridiques français · Micro, EI, EURL, SASU, Holding",
 };

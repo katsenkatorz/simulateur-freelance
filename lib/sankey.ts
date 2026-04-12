@@ -93,39 +93,32 @@ export function simToSankey(sim: Sim, type: string, isB: boolean): SankeyData {
 
 function buildHoldingSankey(sim: Sim, isB: boolean): SankeyData {
   const isSASU = sim.isSASU?.total || 0;
-  const divBrut = sim.divBrut || 0;
-  const mandatAn = sim.mandatAn || 0;
   const chHolding = CHARGES_FIXES_HOLDING;
 
   if (!isB) {
-    // Holding mode A — tout en salaire via Holding
+    // Holding mode A — flat view: CA → destinations finales
     return {
       nodes: [
         { id: "CA", color: C.neutral },
         { id: "Charges SASU", color: C.negative },
-        { id: "IS SASU", color: C.tax },
-        { id: "Mandat", color: C.neutral },
-        { id: "Dividendes", color: C.positive },
         { id: "Charges Holding", color: C.negative },
+        { id: "IS SASU", color: C.tax },
         { id: "Cotisations TNS", color: C.negative },
         { id: "IR", color: C.tax },
         { id: "Net", color: C.primary },
       ],
       links: [
-        { source: "CA", target: "Charges SASU", value: v(CHARGES_FIXES_SOCIETE), startColor: C.negative + "30", endColor: C.negative },
-        { source: "CA", target: "Mandat", value: v(mandatAn), startColor: C.neutral + "30", endColor: C.neutral },
-        { source: "CA", target: "IS SASU", value: v(isSASU), startColor: C.tax + "30", endColor: C.tax },
-        { source: "CA", target: "Dividendes", value: v(divBrut), startColor: C.positive + "30", endColor: C.positive },
-        { source: "Mandat", target: "Charges Holding", value: v(chHolding), startColor: C.negative + "30", endColor: C.negative },
-        { source: "Mandat", target: "Cotisations TNS", value: v(sim.co), startColor: C.negative + "30", endColor: C.negative },
-        { source: "Dividendes", target: "Cotisations TNS", value: v(Math.max(0, (sim.dispo || 0) - mandatAn - sim.co - chHolding + sim.co)), startColor: C.negative + "20", endColor: C.negative },
-        { source: "Mandat", target: "IR", value: v(sim.ir), startColor: C.tax + "30", endColor: C.tax },
-        { source: "Dividendes", target: "Net", value: v(sim.net), startColor: C.primary + "30", endColor: C.primary },
+        { source: "CA", target: "Charges SASU", value: v(CHARGES_FIXES_SOCIETE) },
+        { source: "CA", target: "Charges Holding", value: v(chHolding) },
+        { source: "CA", target: "IS SASU", value: v(isSASU) },
+        { source: "CA", target: "Cotisations TNS", value: v(sim.co) },
+        { source: "CA", target: "IR", value: v(sim.ir) },
+        { source: "CA", target: "Net", value: v(sim.net) },
       ],
     };
   }
 
-  // Holding mode B — salaire + capitalisation
+  // Holding mode B — flat view: CA → destinations finales
   const isHolding = sim.is || 0;
   const ret = sim.ret || 0;
 
@@ -133,10 +126,8 @@ function buildHoldingSankey(sim: Sim, isB: boolean): SankeyData {
     nodes: [
       { id: "CA", color: C.neutral },
       { id: "Charges SASU", color: C.negative },
-      { id: "IS SASU", color: C.tax },
-      { id: "Mandat", color: C.neutral },
-      { id: "Dividendes", color: C.positive },
       { id: "Charges Holding", color: C.negative },
+      { id: "IS SASU", color: C.tax },
       { id: "Cotisations TNS", color: C.negative },
       { id: "IR perso", color: C.tax },
       { id: "IS Holding", color: C.tax },
@@ -144,16 +135,14 @@ function buildHoldingSankey(sim: Sim, isB: boolean): SankeyData {
       { id: "Capital Holding", color: C.positive },
     ],
     links: [
-      { source: "CA", target: "Charges SASU", value: v(CHARGES_FIXES_SOCIETE), startColor: C.negative + "30", endColor: C.negative },
-      { source: "CA", target: "Mandat", value: v(mandatAn), startColor: C.neutral + "30", endColor: C.neutral },
-      { source: "CA", target: "IS SASU", value: v(isSASU), startColor: C.tax + "30", endColor: C.tax },
-      { source: "CA", target: "Dividendes", value: v(divBrut), startColor: C.positive + "30", endColor: C.positive },
-      { source: "Mandat", target: "Charges Holding", value: v(chHolding), startColor: C.negative + "30", endColor: C.negative },
-      { source: "Mandat", target: "Cotisations TNS", value: v(sim.co), startColor: C.negative + "30", endColor: C.negative },
-      { source: "Mandat", target: "IR perso", value: v(sim.ir), startColor: C.tax + "30", endColor: C.tax },
-      { source: "Dividendes", target: "Net perso", value: v(sim.net), startColor: C.primary + "30", endColor: C.primary },
-      { source: "Dividendes", target: "IS Holding", value: v(isHolding), startColor: C.tax + "30", endColor: C.tax },
-      { source: "Dividendes", target: "Capital Holding", value: v(ret), startColor: C.positive + "30", endColor: C.positive },
+      { source: "CA", target: "Charges SASU", value: v(CHARGES_FIXES_SOCIETE) },
+      { source: "CA", target: "Charges Holding", value: v(chHolding) },
+      { source: "CA", target: "IS SASU", value: v(isSASU) },
+      { source: "CA", target: "Cotisations TNS", value: v(sim.co) },
+      { source: "CA", target: "IR perso", value: v(sim.ir) },
+      { source: "CA", target: "IS Holding", value: v(isHolding) },
+      { source: "CA", target: "Net perso", value: v(sim.net) },
+      { source: "CA", target: "Capital Holding", value: v(ret) },
     ],
   };
 }

@@ -47,3 +47,8 @@ next-env.d.ts
 # screenshots audit
 audit-*.png
 new-ui-*.png
+
+# BMAD Method — implementation artifacts (ephemeral)
+_bmad-output/implementation-artifacts/
+_bmad-output/test-artifacts/
+_bmad-output/sprint-status.yaml

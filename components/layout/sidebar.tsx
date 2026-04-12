@@ -63,7 +63,7 @@ export function Sidebar({
       {/* CA */}
       <div>
         <CurrencyInput label="CA annuel HT" value={ca} onChange={setCa} min={10_000} max={1_000_000} />
-        {isCapped && (
+        {isCapped && sel === "micro" && (
           <p className="text-[11px] text-tax mt-2 flex items-center gap-1">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-tax" />
             Micro plafonné à {fmt(MICRO_CAP)}
@@ -217,12 +217,12 @@ export function Sidebar({
 
 // Mobile version
 export function MobileControls({
-  ca, setCa, parts, setParts, gm, setGm, isSeuilEtendu, setIsSeuilEtendu, isCapped,
-}: Pick<SidebarProps, "ca" | "setCa" | "parts" | "setParts" | "gm" | "setGm" | "isSeuilEtendu" | "setIsSeuilEtendu" | "isCapped">) {
+  ca, setCa, parts, setParts, gm, setGm, isSeuilEtendu, setIsSeuilEtendu, isCapped, sel,
+}: Pick<SidebarProps, "ca" | "setCa" | "parts" | "setParts" | "gm" | "setGm" | "isSeuilEtendu" | "setIsSeuilEtendu" | "isCapped" | "sel">) {
   return (
     <div className="lg:hidden border-b border-border-subtle bg-bg-card p-4">
       <CurrencyInput label="" value={ca} onChange={setCa} min={10_000} max={1_000_000} />
-      {isCapped && <p className="text-[10px] text-tax mt-1">Micro plafonné à {fmt(MICRO_CAP)}</p>}
+      {isCapped && sel === "micro" && <p className="text-[10px] text-tax mt-1">Micro plafonné à {fmt(MICRO_CAP)}</p>}
       <div className="flex gap-4 mt-3">
         <div className="flex-1">
           <div className="text-[10px] text-text-tertiary uppercase mb-1">Parts</div>

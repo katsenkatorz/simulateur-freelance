@@ -14,7 +14,7 @@ export function SankeyOverview({ data }: SankeyOverviewProps) {
     <div className="h-[380px] w-full">
       <ResponsiveSankey
         data={data}
-        margin={{ top: 24, right: 160, bottom: 24, left: 24 }}
+        margin={{ top: 24, right: 160, bottom: 24, left: 40 }}
         align="justify"
         colors={(node: Record<string, unknown>) => (node.color as string) || "#71717a"}
         nodeOpacity={1}
@@ -24,10 +24,11 @@ export function SankeyOverview({ data }: SankeyOverviewProps) {
         nodeSpacing={24}
         nodeBorderWidth={0}
         nodeBorderRadius={3}
-        linkOpacity={0.4}
-        linkHoverOpacity={0.7}
-        linkHoverOthersOpacity={0.08}
+        linkOpacity={0.5}
+        linkHoverOpacity={0.8}
+        linkHoverOthersOpacity={0.1}
         linkContract={2}
+        linkBlendMode="normal"
         enableLinkGradient={true}
         labelPosition="outside"
         labelOrientation="horizontal"
