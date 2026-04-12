@@ -20,17 +20,14 @@ interface ComparisonMiniProps {
 }
 
 export function ComparisonMini({ rows, selectedId, onSelect }: ComparisonMiniProps) {
-  const maxNet = Math.max(...rows.map(r => r.net + r.ret));
-
   return (
     <div className="space-y-1">
       {/* Header */}
-      <div className="grid grid-cols-[1fr_auto_auto_auto_80px] gap-3 px-3 py-1.5 text-[10px] text-text-tertiary uppercase tracking-wider">
+      <div className="grid grid-cols-[1fr_auto_auto_80px] gap-3 px-3 py-1.5 text-[10px] text-text-tertiary uppercase tracking-wider">
         <span>Statut</span>
         <span className="text-right w-20">Net/an</span>
         <span className="text-right w-16">Net/mois</span>
-        <span className="text-right w-12">%</span>
-        <span />
+        <span className="text-right">% du CA</span>
       </div>
 
       {/* Rows */}
@@ -38,7 +35,6 @@ export function ComparisonMini({ rows, selectedId, onSelect }: ComparisonMiniPro
         const isSelected = row.struct.id === selectedId;
         const total = row.net + row.ret;
         const pct = row.ca > 0 ? Math.round(total / row.ca * 100) : 0;
-        const barW = maxNet > 0 ? Math.round(total / maxNet * 100) : 0;
         const Icon = row.icon;
 
         return (
@@ -46,7 +42,7 @@ export function ComparisonMini({ rows, selectedId, onSelect }: ComparisonMiniPro
             key={row.struct.id}
             onClick={() => onSelect(row.struct.id)}
             className={cn(
-              "w-full grid grid-cols-[1fr_auto_auto_auto_80px] gap-3 px-3 py-2.5 rounded-md text-sm transition-colors cursor-pointer items-center",
+              "w-full grid grid-cols-[1fr_auto_auto_80px] gap-3 px-3 py-2.5 rounded-md text-sm transition-colors cursor-pointer items-center",
               isSelected
                 ? "bg-bg-elevated text-text-primary"
                 : "text-text-secondary hover:bg-bg-elevated/50"
@@ -58,12 +54,15 @@ export function ComparisonMini({ rows, selectedId, onSelect }: ComparisonMiniPro
             </span>
             <span className="font-mono text-right w-20">{fmt(row.net)}</span>
             <span className="font-mono text-right w-16 text-text-tertiary">{fmt(Math.round(row.net / 12))}</span>
-            <span className="font-mono text-right w-12 text-text-tertiary">{pct}%</span>
-            <div className="h-1.5 bg-bg-primary rounded-full overflow-hidden">
-              <div
-                className={cn("h-full rounded-full transition-all duration-500", isSelected ? "bg-text-primary" : "bg-zinc-600")}
-                style={{ width: barW + "%" }}
-              />
+            {/* Barre proportionnelle au CA (0-100%) */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-bg-primary rounded-full overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full transition-all duration-500", isSelected ? "bg-text-primary" : "bg-zinc-600")}
+                  style={{ width: pct + "%" }}
+                />
+              </div>
+              <span className="font-mono text-[10px] text-text-tertiary w-7 text-right">{pct}%</span>
             </div>
           </button>
         );
