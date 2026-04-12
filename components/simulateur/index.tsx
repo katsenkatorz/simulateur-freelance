@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useQueryStates, parseAsInteger, parseAsString, parseAsBoolean, parseAsFloat } from "nuqs";
 import { ChevronDown } from "lucide-react";
 import {
   MICRO_CAP, IS_SEUIL_REDUIT, IS_SEUIL_PLF2026,
@@ -170,18 +171,33 @@ function CapUsage({ type }: { type: string }) {
 
 // --- Main ---
 export default function App() {
-  const [ca, setCa] = useState(100000);
-  const [parts, setParts] = useState(1);
-  const [sel, setSel] = useState<string>("micro");
-  const [microTab, setMicroTab] = useState("hypo");
-  const [gm, setGm] = useState("A");
-  const [salB, setSalB] = useState(20400);
-  const [mandatM, setMandatM] = useState(6000);
-  const [tab, setTab] = useState("overview");
-  const [regEI, setRegEI] = useState("IS");
-  const [regEURL, setRegEURL] = useState("IS");
-  const [regSASU, setRegSASU] = useState("IS");
-  const [isSeuilEtendu, setIsSeuilEtendu] = useState(false);
+  const [q, setQ] = useQueryStates({
+    ca: parseAsInteger.withDefault(100000),
+    parts: parseAsFloat.withDefault(1),
+    sel: parseAsString.withDefault("micro"),
+    microTab: parseAsString.withDefault("hypo"),
+    gm: parseAsString.withDefault("A"),
+    salB: parseAsInteger.withDefault(20400),
+    mandatM: parseAsInteger.withDefault(6000),
+    tab: parseAsString.withDefault("overview"),
+    regEI: parseAsString.withDefault("IS"),
+    regEURL: parseAsString.withDefault("IS"),
+    regSASU: parseAsString.withDefault("IS"),
+    isSeuilEtendu: parseAsBoolean.withDefault(false),
+  });
+
+  const { ca, parts, sel, microTab, gm, salB, mandatM, tab, regEI, regEURL, regSASU, isSeuilEtendu } = q;
+  const setCa = useCallback((v: number) => setQ({ ca: v }), [setQ]);
+  const setParts = useCallback((v: number) => setQ({ parts: v }), [setQ]);
+  const setGm = useCallback((v: string) => setQ({ gm: v }), [setQ]);
+  const setSalB = useCallback((v: number) => setQ({ salB: v }), [setQ]);
+  const setMandatM = useCallback((v: number) => setQ({ mandatM: v }), [setQ]);
+  const setTab = useCallback((v: string) => setQ({ tab: v }), [setQ]);
+  const setRegEI = useCallback((v: string) => setQ({ regEI: v }), [setQ]);
+  const setRegEURL = useCallback((v: string) => setQ({ regEURL: v }), [setQ]);
+  const setRegSASU = useCallback((v: string) => setQ({ regSASU: v }), [setQ]);
+  const setIsSeuilEtendu = useCallback((v: boolean) => setQ({ isSeuilEtendu: v }), [setQ]);
+  const setMicroTab = useCallback((v: string) => setQ({ microTab: v }), [setQ]);
 
   const isSeuil = isSeuilEtendu ? IS_SEUIL_PLF2026 : IS_SEUIL_REDUIT;
   const mCA = microTab === "real" ? Math.min(ca, MICRO_CAP) : ca;
@@ -221,7 +237,7 @@ export default function App() {
     { id: "holding", name: "SASU+Holding", icon: "holding", color: "#d97706", accent: "#fbbf24", noB: false },
   ];
 
-  const openD = (id: string) => { setSel(id); setTab("overview"); };
+  const openD = (id: string) => { setQ({ sel: id, tab: "overview" }); };
 
   const st = structs.find(s => s.id === sel)!;
   const isB = gm === "B" && !st.noB;

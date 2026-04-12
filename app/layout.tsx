@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +34,7 @@ export default function RootLayout({
       lang="fr"
       className={cn(jetbrains.variable, inter.variable)}
     >
-      <body>{children}</body>
+      <body><NuqsAdapter>{children}</NuqsAdapter></body>
     </html>
   );
 }
