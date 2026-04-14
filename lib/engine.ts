@@ -6,6 +6,8 @@ import {
   IS_TAUX_REDUIT, IS_TAUX_NORMAL,
   CHARGES_FIXES_SOCIETE, CHARGES_FIXES_HOLDING,
   TRIMESTRE_SEUIL, QUATRE_TRIMESTRES,
+  CDI_PATRONAL, CDI_SALARIAL, CDI_PAT_DETAIL, CDI_SAL_DETAIL,
+  PORTAGE_FRAIS_DEFAUT,
 } from "./fiscal";
 import type { Line, ISResult, CotisItem, RetResult } from "./types";
 import { fmt, isLabel } from "./utils";
@@ -152,6 +154,77 @@ export function simHolding(ca: number, parts: number, mode: string, sal: number,
       { l: "IS Holding — " + isLabel(isH), a: -isH.total, t: "x" as const },
       { l: "Cash capitalisé dans la société", a: Math.max(0, ret), t: "s" as const },
       { l: "IR perso", a: -ir, t: "x" as const },
+    ],
+  };
+}
+
+// --- CDI Salarié ---
+export function simCDI(brutAnnuel: number, parts: number) {
+  const brut = brutAnnuel;
+  const pat = Math.round(brut * CDI_PATRONAL);
+  const coutEmployeur = brut + pat;
+  const sal = Math.round(brut * CDI_SALARIAL);
+  const netAvantIR = brut - sal;
+  const ir = calcIR(netAvantIR, parts);
+  const net = netAvantIR - ir;
+  const tr = brut > QUATRE_TRIMESTRES ? 4 : Math.min(4, Math.floor(brut / TRIMESTRE_SEUIL));
+
+  return {
+    kind: 'cdi' as const,
+    ca: coutEmployeur, co: pat + sal, ir, net, ret: 0, brut,
+    coutEmployeur, patronal: pat, salarial: sal, netAvantIR,
+    lines: [
+      { l: "Coût employeur", a: coutEmployeur, t: "n" as const },
+      { l: "Cotisations patronales (~" + Math.round(CDI_PATRONAL * 100) + "%)", a: -pat, t: "c" as const },
+      { l: "Salaire brut", a: brut, t: "s" as const },
+      { l: "Cotisations salariales (~" + Math.round(CDI_SALARIAL * 100) + "%)", a: -sal, t: "c" as const },
+      { l: "Net avant IR", a: netAvantIR, t: "s" as const },
+      { l: "IR", a: -ir, t: "x" as const },
+    ],
+    tr,
+  };
+}
+
+export const mkCDIPat = (brut: number): CotisItem[] => [
+  { n: "🏥 Maladie", a: Math.round(brut * CDI_PAT_DETAIL.maladie), c: "✅" },
+  { n: "👴 Retraite base", a: Math.round(brut * CDI_PAT_DETAIL.retraiteBase), c: "✅" },
+  { n: "👴 AGIRC-ARRCO", a: Math.round(brut * CDI_PAT_DETAIL.retraiteCompl), c: "✅" },
+  { n: "💼 Chômage + AGS", a: Math.round(brut * CDI_PAT_DETAIL.chomage), c: "✅" },
+  { n: "👨‍👩‍👧 Famille", a: Math.round(brut * CDI_PAT_DETAIL.famille), c: "✅" },
+  { n: "📋 Formation + taxe apprentissage", a: Math.round(brut * CDI_PAT_DETAIL.formation), c: "—" },
+  { n: "🛡️ AT/MP + prévoyance", a: Math.round(brut * (CDI_PAT_DETAIL.atmp + CDI_PAT_DETAIL.prevoyance)), c: "✅" },
+];
+
+export const mkCDISal = (brut: number): CotisItem[] => [
+  { n: "👴 Retraite base", a: Math.round(brut * CDI_SAL_DETAIL.retraiteBase), c: "✅" },
+  { n: "👴 AGIRC-ARRCO", a: Math.round(brut * CDI_SAL_DETAIL.retraiteCompl), c: "✅" },
+  { n: "💰 CSG/CRDS", a: Math.round(brut * CDI_SAL_DETAIL.csgCrds), c: "—" },
+  { n: "👴 Vieillesse déplafonnée", a: Math.round(brut * CDI_SAL_DETAIL.vieillesse), c: "✅" },
+];
+
+// --- Portage salarial ---
+export function simPortage(ca: number, parts: number, fraisGestion: number = PORTAGE_FRAIS_DEFAUT) {
+  const frais = Math.round(ca * fraisGestion);
+  const brut = ca - frais;
+  // Portage = régime salarié CDI (mêmes taux)
+  const pat = Math.round(brut * CDI_PATRONAL);
+  const sal = Math.round(brut * CDI_SALARIAL);
+  const netAvantIR = brut - sal;
+  const ir = calcIR(netAvantIR, parts);
+  const net = netAvantIR - ir;
+
+  return {
+    kind: 'portage' as const,
+    ca, co: pat + sal + frais, ir, net, ret: 0, brut,
+    frais, fraisGestion, patronal: pat, salarial: sal, netAvantIR,
+    lines: [
+      { l: "CA HT", a: ca, t: "n" as const },
+      { l: "Frais de gestion (" + Math.round(fraisGestion * 100) + "%)", a: -frais, t: "c" as const },
+      { l: "Salaire brut", a: brut, t: "s" as const },
+      { l: "Cotisations patronales (~" + Math.round(CDI_PATRONAL * 100) + "%)", a: -pat, t: "c" as const },
+      { l: "Cotisations salariales (~" + Math.round(CDI_SALARIAL * 100) + "%)", a: -sal, t: "c" as const },
+      { l: "Net avant IR", a: netAvantIR, t: "s" as const },
+      { l: "IR", a: -ir, t: "x" as const },
     ],
   };
 }

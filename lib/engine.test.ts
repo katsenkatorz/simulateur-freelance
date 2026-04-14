@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   calcIR, calcIS, simMicro, simTNS_A, simTNS_B,
-  simSASU_A, simSASU_B, simHolding, fmt, retInfo,
+  simSASU_A, simSASU_B, simHolding, simCDI, simPortage, fmt, retInfo,
 } from './engine'
 import goldenDataset from './fixtures/golden-dataset.json'
 
@@ -225,6 +225,97 @@ describe('retInfo', () => {
     const result = retInfo('sasu', 35000, 40000)
     expect(result).toHaveProperty('pen')
     expect(result).toHaveProperty('tr')
+  })
+})
+
+// --- CDI engine tests ---
+describe('simCDI', () => {
+  it('returns CDI result with correct shape', () => {
+    const result = simCDI(36000, 1)
+    expect(result.kind).toBe('cdi')
+    expect(result).toHaveProperty('coutEmployeur')
+    expect(result).toHaveProperty('brut')
+    expect(result).toHaveProperty('patronal')
+    expect(result).toHaveProperty('salarial')
+    expect(result).toHaveProperty('netAvantIR')
+    expect(result).toHaveProperty('net')
+    expect(result).toHaveProperty('ir')
+    expect(result).toHaveProperty('lines')
+    expect(result).toHaveProperty('tr')
+  })
+
+  it('employer cost = brut + patronal', () => {
+    const result = simCDI(50000, 1)
+    expect(result.coutEmployeur).toBe(result.brut + result.patronal)
+  })
+
+  it('net avant IR = brut - salarial', () => {
+    const result = simCDI(50000, 1)
+    expect(result.netAvantIR).toBe(result.brut - result.salarial)
+  })
+
+  it('net = netAvantIR - IR', () => {
+    const result = simCDI(50000, 1)
+    expect(result.net).toBe(result.netAvantIR - result.ir)
+  })
+
+  it('employer cost ~1.45x brut', () => {
+    const result = simCDI(50000, 1)
+    const ratio = result.coutEmployeur / result.brut
+    expect(ratio).toBeGreaterThan(1.4)
+    expect(ratio).toBeLessThan(1.5)
+  })
+
+  it('net ~0.55x employer cost', () => {
+    const result = simCDI(50000, 1)
+    const ratio = result.net / result.coutEmployeur
+    expect(ratio).toBeGreaterThan(0.45)
+    expect(ratio).toBeLessThan(0.65)
+  })
+
+  it('handles brut = 0', () => {
+    const result = simCDI(0, 1)
+    expect(result.net).toBe(0)
+    expect(result.coutEmployeur).toBe(0)
+  })
+})
+
+// --- Portage engine tests ---
+describe('simPortage', () => {
+  it('returns Portage result with correct shape', () => {
+    const result = simPortage(100000, 1, 0.08)
+    expect(result.kind).toBe('portage')
+    expect(result).toHaveProperty('ca')
+    expect(result).toHaveProperty('frais')
+    expect(result).toHaveProperty('brut')
+    expect(result).toHaveProperty('net')
+    expect(result).toHaveProperty('ir')
+    expect(result).toHaveProperty('lines')
+  })
+
+  it('brut = CA - frais', () => {
+    const result = simPortage(100000, 1, 0.08)
+    expect(result.brut).toBe(100000 - result.frais)
+  })
+
+  it('frais = CA * fraisGestion', () => {
+    const result = simPortage(100000, 1, 0.10)
+    expect(result.frais).toBe(10000)
+  })
+
+  it('default frais is 8%', () => {
+    const result = simPortage(100000, 1)
+    expect(result.frais).toBe(8000)
+  })
+
+  it('net > 0 for positive CA', () => {
+    const result = simPortage(80000, 1, 0.08)
+    expect(result.net).toBeGreaterThan(0)
+  })
+
+  it('handles CA = 0', () => {
+    const result = simPortage(0, 1, 0.08)
+    expect(result.net).toBe(0)
   })
 })
 

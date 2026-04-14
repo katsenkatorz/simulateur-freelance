@@ -68,6 +68,35 @@ export const IS_TAUX_NORMAL = 0.25;
 export const CHARGES_FIXES_SOCIETE = 3_000; // Charges annuelles société (compta, etc.)
 export const CHARGES_FIXES_HOLDING = 4_000; // Charges annuelles holding
 
+// --- CDI Salarié (cadre, entreprise ≥ 50 salariés, Tranche 1 simplifiée) ---
+// Sources : CCI Paris IDF 2026, StaffnGo, LegiSocial, URSSAF
+export const CDI_PATRONAL = 0.45;   // ~45% charges patronales / brut (T1 cadre)
+export const CDI_SALARIAL = 0.22;   // ~22% charges salariales / brut (T1 cadre)
+// Ventilation patronale (sur brut, Tranche 1)
+export const CDI_PAT_DETAIL = {
+  maladie: 0.13,           // 13%
+  retraiteBase: 0.0855,    // 8.55%
+  retraiteCompl: 0.0601,   // AGIRC-ARRCO 4.72% + CEG 1.29%
+  chomage: 0.042,          // 4.00% + AGS 0.20%
+  famille: 0.0525,         // 5.25%
+  formation: 0.0168,       // 1.00% + taxe apprentissage 0.68%
+  atmp: 0.02,              // AT/MP ~2% (variable selon activité)
+  prevoyance: 0.015,       // Prévoyance cadre 1.50%
+};
+// Ventilation salariale (sur brut, Tranche 1)
+export const CDI_SAL_DETAIL = {
+  retraiteBase: 0.069,     // 6.90%
+  retraiteCompl: 0.0415,   // AGIRC-ARRCO 3.15% + CEG 0.86% + CET 0.14%
+  csgCrds: 0.097,          // 9.70% sur 98.25% brut ≈ 9.53% effectif, arrondi à 9.7%
+  vieillesse: 0.004,       // 0.40% déplafonnée
+};
+
+// --- Portage salarial ---
+export const PORTAGE_FRAIS_DEFAUT = 0.08;  // 8% frais de gestion par défaut
+export const PORTAGE_FRAIS_MIN = 0.05;     // 5% minimum
+export const PORTAGE_FRAIS_MAX = 0.15;     // 15% maximum
+// Les cotisations portage = régime salarié CDI (même taux)
+
 // --- Retraite : validation trimestres ---
 // Basé sur 150h × SMIC horaire 2026 (12.02€)
 export const TRIMESTRE_SEUIL = 1_803; // Revenu minimum pour valider 1 trimestre

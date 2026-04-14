@@ -81,7 +81,27 @@ export interface SimHolding extends SimBase {
   profitH?: number;
 }
 
-export type Sim = SimMicro | SimTNS_A | SimTNS_B | SimSASU_A | SimSASU_B | SimHolding;
+export interface SimCDI extends SimBase {
+  kind: 'cdi';
+  brut: number;
+  coutEmployeur: number;
+  patronal: number;
+  salarial: number;
+  netAvantIR: number;
+  tr: number;
+}
+
+export interface SimPortage extends SimBase {
+  kind: 'portage';
+  brut: number;
+  frais: number;
+  fraisGestion: number;
+  patronal: number;
+  salarial: number;
+  netAvantIR: number;
+}
+
+export type Sim = SimMicro | SimTNS_A | SimTNS_B | SimSASU_A | SimSASU_B | SimHolding | SimCDI | SimPortage;
 
 export interface StructConfig {
   id: string;
