@@ -45,7 +45,7 @@ export function isLabel(is: ISResult): string {
 export function simMicro(ca: number, parts: number, isSeuil: number) {
   const co = Math.round(ca * MICRO_BNC_TAUX), rev = ca - co;
   const ir = calcIR(ca * (1 - MICRO_BNC_ABATTEMENT) / (1 - ABATTEMENT_IR), parts);
-  return { ca, co, ir, net: rev - ir, rev, ret: 0, lines: [
+  return { kind: 'micro' as const, ca, co, ir, net: rev - ir, rev, ret: 0, lines: [
     { l: "Chiffre d'affaires", a: ca, t: "n" as const },
     { l: "URSSAF (" + (MICRO_BNC_TAUX * 100).toFixed(1).replace(".", ",") + "%)", a: -co, t: "c" as const },
     { l: "Revenu avant IR", a: rev, t: "s" as const },
@@ -55,7 +55,7 @@ export function simMicro(ca: number, parts: number, isSeuil: number) {
 
 export function simTNS_A(ca: number, parts: number, label: string, isSeuil: number) {
   const ch = CHARGES_FIXES_SOCIETE, ben = ca - ch, nr = Math.round(ben / TNS_COEFF), co = ben - nr, ir = calcIR(nr, parts);
-  return { ca, co: co + ch, ir, net: nr - ir, nr, ret: 0, cotisOnly: co, lines: [
+  return { kind: 'tns_a' as const, ca, co: co + ch, ir, net: nr - ir, nr, ret: 0, cotisOnly: co, lines: [
     { l: "CA HT", a: ca, t: "n" as const }, { l: "Charges", a: -ch, t: "c" as const },
     { l: "URSSAF TNS (~43%)", a: -co, t: "c" as const }, { l: label || "Revenu net", a: nr, t: "s" as const },
     { l: "IR", a: -ir, t: "x" as const },
@@ -65,7 +65,7 @@ export function simTNS_A(ca: number, parts: number, label: string, isSeuil: numb
 export function simTNS_B(ca: number, parts: number, sal: number, isSeuil: number) {
   const ch = CHARGES_FIXES_SOCIETE, ben = ca - ch, coS = Math.round(sal * 0.43), profit = Math.max(0, ben - sal - coS);
   const is = calcIS(profit, isSeuil), ret = profit - is.total, ir = calcIR(sal, parts);
-  return { ca, co: ch + coS, ir, is: is.total, isD: is, net: sal - ir, nr: sal, ret, cotisOnly: coS, profit, lines: [
+  return { kind: 'tns_b' as const, ca, co: ch + coS, ir, is: is.total, isD: is, net: sal - ir, nr: sal, ret, cotisOnly: coS, profit, lines: [
     { l: "CA HT", a: ca, t: "n" as const }, { l: "Charges", a: -ch, t: "c" as const },
     { l: "Salaire " + fmt(sal) + "/an", a: sal, t: "s" as const }, { l: "URSSAF TNS", a: -coS, t: "c" as const },
     { l: "Résultat", a: profit, t: "s" as const }, { l: isLabel(is), a: -is.total, t: "x" as const },
@@ -76,7 +76,7 @@ export function simTNS_B(ca: number, parts: number, sal: number, isSeuil: number
 export function simSASU_A(ca: number, parts: number, isSeuil: number) {
   const ch = CHARGES_FIXES_SOCIETE, d = ca - ch, b = Math.round(d / SASU_COEFF_TOTAL), pat = d - b;
   const sal = Math.round(b * SASU_CHARGES_SAL), n = b - sal, ir = calcIR(n, parts);
-  return { ca, co: pat + sal + ch, ir, net: n - ir, brut: b, nAv: n, ret: 0, lines: [
+  return { kind: 'sasu_a' as const, ca, co: pat + sal + ch, ir, net: n - ir, brut: b, nAv: n, ret: 0, lines: [
     { l: "CA HT", a: ca, t: "n" as const }, { l: "Charges", a: -ch, t: "c" as const },
     { l: "Charges patronales (~55%)", a: -pat, t: "c" as const }, { l: "Brut", a: b, t: "s" as const },
     { l: "Charges salariales (~22%)", a: -sal, t: "c" as const }, { l: "Net avant IR", a: n, t: "s" as const },
@@ -88,7 +88,7 @@ export function simSASU_B(ca: number, parts: number, sal: number, isSeuil: numbe
   const ch = CHARGES_FIXES_SOCIETE, d = ca - ch, sb = Math.round(sal / SASU_COEFF_NET);
   const pat = Math.round(sb * SASU_CHARGES_PAT), salCh = Math.round(sb * SASU_CHARGES_SAL), ct = sb + pat;
   const profit = Math.max(0, d - ct), is = calcIS(profit, isSeuil), ret = profit - is.total, ir = calcIR(sal, parts);
-  return { ca, co: pat + salCh + ch, ir, is: is.total, isD: is, net: sal - ir, brut: sb, ret, profit, lines: [
+  return { kind: 'sasu_b' as const, ca, co: pat + salCh + ch, ir, is: is.total, isD: is, net: sal - ir, brut: sb, ret, profit, lines: [
     { l: "CA HT", a: ca, t: "n" as const }, { l: "Charges", a: -ch, t: "c" as const },
     { l: "Salaire " + fmt(sal) + "/an", a: sal, t: "s" as const }, { l: "URSSAF", a: -(pat + salCh), t: "c" as const },
     { l: "Résultat", a: profit, t: "s" as const }, { l: isLabel(is), a: -is.total, t: "x" as const },
@@ -125,6 +125,7 @@ export function simHolding(ca: number, parts: number, mode: string, sal: number,
     const co = Math.max(0, cashDispo) - nr;
     const ir = calcIR(nr, parts);
     return {
+      kind: 'holding_a' as const,
       ca, net: nr - ir, ret: 0, nr, dispo: cashDispo,
       divBrut, qp, mandatAn, resultSASU, isSASU, co, ir,
       sasuL, holdL,
@@ -144,6 +145,7 @@ export function simHolding(ca: number, parts: number, mode: string, sal: number,
   const ret = cashDispo - salaryCost - isH.total;
   const ir = calcIR(sal, parts);
   return {
+    kind: 'holding_b' as const,
     ca, net: sal - ir, ret: Math.max(0, ret), nr: sal, dispo: cashDispo,
     divBrut, qp, mandatAn, resultSASU, isSASU, isH,
     taxableIncome, profitH: taxableIncome,

@@ -12,7 +12,10 @@ import {
   retInfo, mkTNS, mkSASU, mkMicro,
   fmt, MICRO_TAUX_LABEL,
 } from "@/lib/engine";
-import type { Sim, Line, CotisItem, RetResult, StructConfig } from "@/lib/types";
+import type { Line, CotisItem, RetResult, StructConfig } from "@/lib/types";
+// TODO: Narrow Sim usage after Epic 3/4 cascade refactor
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Sim = any;
 import { cn } from "@/lib/utils";
 
 import { Header } from "@/components/layout/header";

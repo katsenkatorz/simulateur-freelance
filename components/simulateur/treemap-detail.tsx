@@ -3,7 +3,10 @@
 import { Treemap } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { fmt } from "@/lib/engine";
-import type { Sim, CotisItem } from "@/lib/types";
+import type { CotisItem } from "@/lib/types";
+// TODO: Narrow Sim usage after Epic 3 cascade refactor
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Sim = any;
 
 interface TreemapDetailProps {
   sim: Sim;

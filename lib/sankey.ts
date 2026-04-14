@@ -1,4 +1,6 @@
-import type { Sim } from "./types";
+// TODO: Delete this file entirely in Story 2.1 (dead code)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Sim = any;
 import { CHARGES_FIXES_SOCIETE, CHARGES_FIXES_HOLDING } from "./fiscal";
 
 interface SankeyNode {

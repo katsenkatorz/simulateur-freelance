@@ -31,15 +31,18 @@ export interface SimBase {
 }
 
 export interface SimMicro extends SimBase {
+  kind: 'micro';
   rev: number;
 }
 
 export interface SimTNS_A extends SimBase {
+  kind: 'tns_a';
   nr: number;
   cotisOnly: number;
 }
 
 export interface SimTNS_B extends SimBase {
+  kind: 'tns_b';
   nr: number;
   cotisOnly: number;
   is: number;
@@ -48,11 +51,13 @@ export interface SimTNS_B extends SimBase {
 }
 
 export interface SimSASU_A extends SimBase {
+  kind: 'sasu_a';
   brut: number;
   nAv: number;
 }
 
 export interface SimSASU_B extends SimBase {
+  kind: 'sasu_b';
   brut: number;
   is: number;
   isD: ISResult;
@@ -60,6 +65,7 @@ export interface SimSASU_B extends SimBase {
 }
 
 export interface SimHolding extends SimBase {
+  kind: 'holding_a' | 'holding_b';
   nr: number;
   dispo: number;
   divBrut: number;
@@ -75,8 +81,7 @@ export interface SimHolding extends SimBase {
   profitH?: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Sim = any;
+export type Sim = SimMicro | SimTNS_A | SimTNS_B | SimSASU_A | SimSASU_B | SimHolding;
 
 export interface StructConfig {
   id: string;

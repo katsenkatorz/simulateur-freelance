@@ -1,6 +1,8 @@
 import type { Node, Edge } from "@xyflow/react";
 import { Position } from "@xyflow/react";
-import type { Sim } from "@/lib/types";
+// TODO: Remove `any` cast after Epic 8 rebuilds flow with proper narrowing
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Sim = any;
 import { fmt, isLabel } from "@/lib/engine";
 import { CHARGES_FIXES_SOCIETE } from "@/lib/fiscal";
 
