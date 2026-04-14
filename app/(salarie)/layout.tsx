@@ -24,7 +24,7 @@ export default function SalarieLayout({
           </div>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
+      <main id="main-content" className="flex-1">{children}</main>
       <footer className="border-t border-border-subtle py-4 px-4 text-center">
         <p className="text-xs text-text-tertiary">
           Simulateur à but pédagogique · Barème officiel 2026 · Les résultats sont indicatifs

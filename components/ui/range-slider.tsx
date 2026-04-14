@@ -10,9 +10,12 @@ interface RangeSliderProps {
   value: number;
   onChange: (v: number) => void;
   className?: string;
+  label?: string;
+  valueText?: string;
+  describedBy?: string;
 }
 
-export function RangeSlider({ min, max, step, value, onChange, className }: RangeSliderProps) {
+export function RangeSlider({ min, max, step, value, onChange, className, label, valueText, describedBy }: RangeSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
 
@@ -43,8 +46,31 @@ export function RangeSlider({ min, max, step, value, onChange, className }: Rang
   return (
     <div
       ref={trackRef}
-      className={cn("relative h-8 flex items-center cursor-pointer select-none", className)}
+      role="slider"
+      aria-label={label}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={value}
+      aria-valuetext={valueText || String(value)}
+      aria-describedby={describedBy}
+      tabIndex={0}
+      className={cn("relative h-8 flex items-center cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent rounded", className)}
       onPointerDown={handlePointer}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+          e.preventDefault()
+          onChange(Math.min(max, value + step))
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+          e.preventDefault()
+          onChange(Math.max(min, value - step))
+        } else if (e.key === "Home") {
+          e.preventDefault()
+          onChange(min)
+        } else if (e.key === "End") {
+          e.preventDefault()
+          onChange(max)
+        }
+      }}
     >
       {/* Track background */}
       <div className="absolute left-0 right-0 h-1.5 rounded-full bg-border-strong" />
