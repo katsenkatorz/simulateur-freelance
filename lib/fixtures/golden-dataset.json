@@ -1,0 +1,142 @@
+[
+  {
+    "name": "Micro CA=0 célibataire",
+    "kind": "micro",
+    "input": { "ca": 0, "parts": 1, "seuil": 42500 },
+    "expected": { "net": 0, "co": 0, "ir": 0 },
+    "source": "Trivial: zero CA = zero everything"
+  },
+  {
+    "name": "Micro CA=30k célibataire",
+    "kind": "micro",
+    "input": { "ca": 30000, "parts": 1, "seuil": 42500 },
+    "expected": { "net": 21418, "co": 7680, "ir": 902 },
+    "source": "Engine baseline 2026-04. URSSAF micro BNC 25.6%, IR barème 2026 1 part"
+  },
+  {
+    "name": "Micro CA=50k célibataire",
+    "kind": "micro",
+    "input": { "ca": 50000, "parts": 1, "seuil": 42500 },
+    "expected": { "net": 34196, "co": 12800, "ir": 3004 },
+    "source": "Engine baseline 2026-04. URSSAF micro BNC 25.6%, IR barème 2026 1 part"
+  },
+  {
+    "name": "Micro CA=80k célibataire",
+    "kind": "micro",
+    "input": { "ca": 80000, "parts": 1, "seuil": 42500 },
+    "expected": { "net": 50576, "co": 20480, "ir": 8944 },
+    "source": "Engine baseline 2026-04. Near micro BNC cap (83,600€)"
+  },
+  {
+    "name": "Micro CA=50k couple",
+    "kind": "micro",
+    "input": { "ca": 50000, "parts": 2, "seuil": 42500 },
+    "expected": { "net": 36122, "co": 12800, "ir": 1078 },
+    "source": "Engine baseline 2026-04. QF reduces IR vs 1 part"
+  },
+  {
+    "name": "EI Mode A CA=50k célibataire",
+    "kind": "tns_a",
+    "input": { "ca": 50000, "parts": 1, "label": "EI", "seuil": 42500 },
+    "expected": { "net": 30889, "co": 17133, "ir": 1978 },
+    "source": "Engine baseline 2026-04. TNS ~43%, charges fixes 3k"
+  },
+  {
+    "name": "EI Mode A CA=100k célibataire",
+    "kind": "tns_a",
+    "input": { "ca": 100000, "parts": 1, "label": "EI", "seuil": 42500 },
+    "expected": { "net": 56413, "co": 32168, "ir": 11419 },
+    "source": "Engine baseline 2026-04. High CA, higher IR bracket"
+  },
+  {
+    "name": "EI Mode A CA=100k famille (2.5 parts)",
+    "kind": "tns_a",
+    "input": { "ca": 100000, "parts": 2.5, "label": "EI", "seuil": 42500 },
+    "expected": { "net": 61834, "co": 32168, "ir": 5998 },
+    "source": "Engine baseline 2026-04. QF with 2.5 parts significantly reduces IR"
+  },
+  {
+    "name": "EURL Mode B CA=100k sal=20k seuil standard",
+    "kind": "tns_b",
+    "input": { "ca": 100000, "parts": 1, "sal": 20000, "seuil": 42500 },
+    "expected": { "net": 19296, "co": 11600, "ir": 704, "is": 12850 },
+    "source": "Engine baseline 2026-04. IS 15% on 42.5k + 25% remainder"
+  },
+  {
+    "name": "EURL Mode B CA=120k sal=25k seuil PLF 100k",
+    "kind": "tns_b",
+    "input": { "ca": 120000, "parts": 1, "sal": 25000, "seuil": 100000 },
+    "expected": { "net": 23801, "co": 13750, "ir": 1199, "is": 12188 },
+    "source": "Engine baseline 2026-04. Extended IS threshold reduces IS"
+  },
+  {
+    "name": "SASU Mode A CA=80k célibataire",
+    "kind": "sasu_a",
+    "input": { "ca": 80000, "parts": 1, "seuil": 42500 },
+    "expected": { "net": 35182, "co": 41252, "ir": 3566 },
+    "source": "Engine baseline 2026-04. ~77% total charges"
+  },
+  {
+    "name": "SASU Mode A CA=120k célibataire",
+    "kind": "sasu_a",
+    "input": { "ca": 120000, "parts": 1, "seuil": 42500 },
+    "expected": { "net": 49877, "co": 61122, "ir": 9001 },
+    "source": "Engine baseline 2026-04. High CA, high charges"
+  },
+  {
+    "name": "SASU Mode A CA=120k couple",
+    "kind": "sasu_a",
+    "input": { "ca": 120000, "parts": 2, "seuil": 42500 },
+    "expected": { "net": 53491, "co": 61122, "ir": 5387 },
+    "source": "Engine baseline 2026-04. QF reduces IR"
+  },
+  {
+    "name": "SASU Mode B CA=120k sal=25k seuil standard",
+    "kind": "sasu_b",
+    "input": { "ca": 120000, "parts": 1, "sal": 25000, "seuil": 42500 },
+    "expected": { "net": 23801, "co": 27679, "ir": 1199, "is": 12580 },
+    "source": "Engine baseline 2026-04. Capitalization with IS standard threshold"
+  },
+  {
+    "name": "SASU Mode B CA=120k sal=25k seuil PLF 100k",
+    "kind": "sasu_b",
+    "input": { "ca": 120000, "parts": 1, "sal": 25000, "seuil": 100000 },
+    "expected": { "net": 23801, "co": 27679, "ir": 1199, "is": 10098 },
+    "source": "Engine baseline 2026-04. Extended IS threshold saves ~2.5k"
+  },
+  {
+    "name": "Holding Mode A CA=150k mandat=500/m célibataire",
+    "kind": "holding_a",
+    "input": { "ca": 150000, "parts": 1, "mode": "A", "sal": 20000, "mandatMonth": 500, "seuil": 42500 },
+    "expected": { "net": 64071, "ir": 14251 },
+    "source": "Engine baseline 2026-04. Full salary mode holding"
+  },
+  {
+    "name": "Holding Mode B CA=150k sal=20k mandat=500/m célibataire",
+    "kind": "holding_b",
+    "input": { "ca": 150000, "parts": 1, "mode": "B", "sal": 20000, "mandatMonth": 500, "seuil": 42500 },
+    "expected": { "net": 19296, "ir": 704, "is": 0 },
+    "source": "Engine baseline 2026-04. Capitalization holding, low salary = no IS"
+  },
+  {
+    "name": "Holding Mode B CA=200k sal=30k mandat=1000/m couple",
+    "kind": "holding_b",
+    "input": { "ca": 200000, "parts": 2, "mode": "B", "sal": 30000, "mandatMonth": 1000, "seuil": 42500 },
+    "expected": { "net": 29582, "ir": 418, "is": 0 },
+    "source": "Engine baseline 2026-04. High CA holding, couple"
+  },
+  {
+    "name": "IR boundary: just at 0% limit (11,497€)",
+    "kind": "ir",
+    "input": { "rn": 11497, "parts": 1 },
+    "expected": { "ir": 0 },
+    "source": "Barème IR 2026: 0% up to 11,600€ (with 10% abattement, rn=11,497 → taxable ~10,347)"
+  },
+  {
+    "name": "IR boundary: at 11% limit (29,315€)",
+    "kind": "ir",
+    "input": { "rn": 29315, "parts": 1 },
+    "expected": { "ir": 1626 },
+    "source": "Barème IR 2026: 11% bracket from 11,600 to 29,579€"
+  }
+]

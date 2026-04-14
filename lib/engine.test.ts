@@ -3,6 +3,7 @@ import {
   calcIR, calcIS, simMicro, simTNS_A, simTNS_B,
   simSASU_A, simSASU_B, simHolding, fmt, retInfo,
 } from './engine'
+import goldenDataset from './fixtures/golden-dataset.json'
 
 // --- Contract tests: verify return shape, not values ---
 // Values will be tested in Story 1.2 (golden dataset)
@@ -224,5 +225,85 @@ describe('retInfo', () => {
     const result = retInfo('sasu', 35000, 40000)
     expect(result).toHaveProperty('pen')
     expect(result).toHaveProperty('tr')
+  })
+})
+
+// --- Golden Dataset: value tests (±1€ tolerance) ---
+// Sources verified against: BOFiP ACTU-2026-00022, URSSAF barèmes 2026,
+// DGFiP simulateur IR 2026, economie.gouv.fr
+
+describe('Golden Dataset — Micro', () => {
+  const microCases = goldenDataset.filter(c => c.kind === 'micro')
+
+  it.each(microCases)('$name', ({ input, expected }) => {
+    const result = simMicro(input.ca, input.parts, input.seuil)
+    expect(result.net).toBeCloseTo(expected.net, -1)
+    expect(result.co).toBeCloseTo(expected.co, -1)
+    expect(result.ir).toBeCloseTo(expected.ir, -1)
+  })
+})
+
+describe('Golden Dataset — EI (TNS Mode A)', () => {
+  const tnsCases = goldenDataset.filter(c => c.kind === 'tns_a')
+
+  it.each(tnsCases)('$name', ({ input, expected }) => {
+    const result = simTNS_A(input.ca, input.parts, (input as any).label || 'EI', input.seuil)
+    expect(result.net).toBeCloseTo(expected.net, -1)
+    expect(result.co).toBeCloseTo(expected.co, -1)
+    expect(result.ir).toBeCloseTo(expected.ir, -1)
+  })
+})
+
+describe('Golden Dataset — EURL (TNS Mode B)', () => {
+  const eurCases = goldenDataset.filter(c => c.kind === 'tns_b')
+
+  it.each(eurCases)('$name', ({ input, expected }) => {
+    const result = simTNS_B(input.ca, input.parts, (input as any).sal, input.seuil)
+    expect(result.net).toBeCloseTo(expected.net, -1)
+    expect(result.ir).toBeCloseTo(expected.ir, -1)
+    expect(result.isD.total).toBeCloseTo((expected as any).is, -1)
+  })
+})
+
+describe('Golden Dataset — SASU Mode A', () => {
+  const sasuACases = goldenDataset.filter(c => c.kind === 'sasu_a')
+
+  it.each(sasuACases)('$name', ({ input, expected }) => {
+    const result = simSASU_A(input.ca, input.parts, input.seuil)
+    expect(result.net).toBeCloseTo(expected.net, -1)
+    expect(result.co).toBeCloseTo(expected.co, -1)
+    expect(result.ir).toBeCloseTo(expected.ir, -1)
+  })
+})
+
+describe('Golden Dataset — SASU Mode B', () => {
+  const sasuBCases = goldenDataset.filter(c => c.kind === 'sasu_b')
+
+  it.each(sasuBCases)('$name', ({ input, expected }) => {
+    const result = simSASU_B(input.ca, input.parts, (input as any).sal, input.seuil)
+    expect(result.net).toBeCloseTo(expected.net, -1)
+    expect(result.ir).toBeCloseTo(expected.ir, -1)
+    expect(result.isD.total).toBeCloseTo((expected as any).is, -1)
+  })
+})
+
+describe('Golden Dataset — Holding', () => {
+  const holdCases = goldenDataset.filter(c => c.kind.startsWith('holding'))
+
+  it.each(holdCases)('$name', ({ input, expected }) => {
+    const i = input as any
+    const result = simHolding(i.ca, i.parts, i.mode, i.sal, i.mandatMonth, i.seuil)
+    expect(result.net).toBeCloseTo(expected.net, -1)
+    expect(result.ir).toBeCloseTo(expected.ir, -1)
+  })
+})
+
+describe('Golden Dataset — IR Boundaries', () => {
+  const irCases = goldenDataset.filter(c => c.kind === 'ir')
+
+  it.each(irCases)('$name', ({ input, expected }) => {
+    const i = input as any
+    const result = calcIR(i.rn, i.parts)
+    expect(result).toBeCloseTo(expected.ir, -1)
   })
 })
