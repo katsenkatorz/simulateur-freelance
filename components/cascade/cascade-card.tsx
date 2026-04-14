@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { fmt } from "@/lib/utils"
+import { ChevronDown } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 export type CascadeItemType = "ca" | "charge" | "tax" | "net"
@@ -103,6 +104,17 @@ export function CascadeCard({
           </div>
         </div>
       </div>
+
+      {/* Expand affordance */}
+      {children && (
+        <ChevronDown
+          size={14}
+          className={cn(
+            "absolute top-4 right-4 text-text-tertiary transition-transform duration-300",
+            isExpanded && "rotate-180"
+          )}
+        />
+      )}
 
       {/* Proportional bar */}
       <div className="mt-3 h-1.5 bg-white/5 rounded-full overflow-hidden">

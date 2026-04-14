@@ -174,11 +174,11 @@ function CapUsage({ type }: { type: string }) {
 }
 
 // --- Main ---
-export default function App() {
+export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
   const [q, setQ] = useQueryStates({
     ca: parseAsInteger.withDefault(100000),
     parts: parseAsFloat.withDefault(1),
-    sel: parseAsString.withDefault("micro"),
+    sel: parseAsString.withDefault(defaultSel),
     microTab: parseAsString.withDefault("hypo"),
     gm: parseAsString.withDefault("A"),
     salB: parseAsInteger.withDefault(20400),
@@ -281,9 +281,7 @@ export default function App() {
   if (isB) tabItems.push({ k: "capital", l: "Capital" });
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header structs={structs} sel={sel} onSelect={openD} getData={getData} icons={STRUCT_ICONS} />
-
+    <div className="flex flex-col flex-1">
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
         <Sidebar
           ca={ca} setCa={setCa} parts={parts} setParts={setParts}
@@ -403,9 +401,9 @@ export default function App() {
                       <div className="mt-4">
                         <RepartitionBar
                           segments={[
-                            { key: "cotisations", label: "Cotisations", amount: sim.co, percent: pCo, color: "#71717a", monthly: Math.round(sim.co / 12) },
-                            { key: "impots", label: "Impôts", amount: (sim.is || 0) + sim.ir, percent: pIr, color: "#52525b", monthly: Math.round(((sim.is || 0) + sim.ir) / 12) },
-                            { key: "net", label: "Net perso", amount: sim.net, percent: pNet, color: "#e4e4e7", monthly: Math.round(sim.net / 12) },
+                            { key: "cotisations", label: "Cotisations", amount: sim.co, percent: pCo, color: "#f43f5e", monthly: Math.round(sim.co / 12) },
+                            { key: "impots", label: "Impôts", amount: (sim.is || 0) + sim.ir, percent: pIr, color: "#f59e0b", monthly: Math.round(((sim.is || 0) + sim.ir) / 12) },
+                            { key: "net", label: "Net perso", amount: sim.net, percent: pNet, color: "#22c55e", monthly: Math.round(sim.net / 12) },
                             ...(pRet > 0 ? [{ key: "capital", label: "Capital", amount: sim.ret, percent: pRet, color: "#22c55e", monthly: Math.round(sim.ret / 12) } as Segment] : []),
                           ]}
                           ca={ca}

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function MicroPage() {
   return (
     <Suspense>
-      <App />
+      <App defaultSel="micro" />
     </Suspense>
   )
 }

@@ -21,9 +21,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Simulateur Freelance — Comparateur fiscal",
-  description:
-    "Comparez 5 statuts juridiques français · Micro, EI, EURL, SASU, Holding",
+  metadataBase: new URL("https://simulateur-freelance-ten.vercel.app"),
+  title: "Simulateur de Rémunération — Où va votre argent ?",
+  description: "Visualisez où va chaque euro : cotisations, impôts, net. Freelance, CDI, portage. Barème officiel 2026.",
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    siteName: "Simulateur de Rémunération",
+  },
 };
 
 export default function RootLayout({

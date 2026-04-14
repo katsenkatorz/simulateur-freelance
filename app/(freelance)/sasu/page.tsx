@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function SASUPage() {
   return (
     <Suspense>
-      <App />
+      <App defaultSel="sasu" />
     </Suspense>
   )
 }

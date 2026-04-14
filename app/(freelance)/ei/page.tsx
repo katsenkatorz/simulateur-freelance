@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function EIPage() {
   return (
     <Suspense>
-      <App />
+      <App defaultSel="ei" />
     </Suspense>
   )
 }

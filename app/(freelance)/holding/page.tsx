@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function HoldingPage() {
   return (
     <Suspense>
-      <App />
+      <App defaultSel="holding" />
     </Suspense>
   )
 }

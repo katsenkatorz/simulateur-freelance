@@ -17,13 +17,13 @@ export function HeroNet({ net, ca, source = "Barème officiel 2026" }: HeroNetPr
         Vous gardez
       </div>
       <div
-        className="font-mono font-bold text-[28px] lg:text-[32px] text-positive mt-2"
+        className="font-mono font-bold text-[32px] lg:text-[40px] text-positive mt-2"
         aria-live="polite"
       >
-        {fmt(net)}
+        {fmt(net)}<span className="text-lg lg:text-xl text-text-tertiary ml-1">/an</span>
       </div>
-      <div className="font-mono text-sm text-text-tertiary mt-1">
-        {pct}% de votre CA
+      <div className="font-mono text-sm text-text-secondary mt-1">
+        {fmt(Math.round(net / 12))}/mois · {pct}% du CA
       </div>
       <div className="text-xs text-text-tertiary mt-2">
         {source}

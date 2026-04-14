@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function EURLPage() {
   return (
     <Suspense>
-      <App />
+      <App defaultSel="eurl" />
     </Suspense>
   )
 }
