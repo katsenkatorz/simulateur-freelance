@@ -1,0 +1,154 @@
+- generic [active] [ref=e1]:
+  - link "Aller au contenu principal" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "Simulateur" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - navigation "Choisir un statut" [ref=e8]:
+          - link "Micro" [ref=e9] [cursor=pointer]:
+            - /url: /micro
+          - link "EI" [ref=e10] [cursor=pointer]:
+            - /url: /ei
+          - link "EURL" [ref=e11] [cursor=pointer]:
+            - /url: /eurl
+          - link "SASU" [ref=e12] [cursor=pointer]:
+            - /url: /sasu
+          - link "SASU+Holding" [ref=e13] [cursor=pointer]:
+            - /url: /holding
+    - main [ref=e14]:
+      - generic [ref=e16]:
+        - complementary [ref=e17]:
+          - generic [ref=e18]:
+            - generic [ref=e19]:
+              - generic [ref=e20]: CA annuel HT
+              - generic [ref=e21]:
+                - textbox [ref=e22]: 100 000
+                - generic: €
+              - generic [ref=e23]:
+                - button "30k" [ref=e24]
+                - button "50k" [ref=e25]
+                - button "100k" [ref=e26]
+                - button "200k" [ref=e27]
+                - button "500k" [ref=e28]
+            - paragraph [ref=e29]: Micro plafonné à 83 600 €
+          - generic [ref=e31]:
+            - generic [ref=e32]:
+              - img [ref=e33]
+              - text: Parts fiscales
+            - generic [ref=e38]:
+              - button "1" [ref=e39]
+              - button "1.5" [ref=e40]
+              - button "2" [ref=e41]
+              - button "2.5" [ref=e42]
+              - button "3" [ref=e43]
+            - paragraph [ref=e44]: 1 = célib · 2 = couple · +0.5/enfant
+          - generic [ref=e45]:
+            - generic [ref=e46]:
+              - img [ref=e47]
+              - text: Stratégie
+            - generic [ref=e51]:
+              - button "Salaire" [ref=e52]
+              - button "Capitaliser" [ref=e53]
+          - generic [ref=e54]:
+            - generic [ref=e55]:
+              - img [ref=e56]
+              - text: Seuil IS 15%
+            - generic [ref=e60]:
+              - button "42 500 €" [ref=e61]
+              - button "100 000 €" [ref=e62]
+          - paragraph [ref=e65]: Simulation simplifiée · Micro BNC (34%) · Valider avec un expert-comptable
+        - main [ref=e66]:
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - heading "Micro" [level=2] [ref=e69]:
+                - img [ref=e70]
+                - text: Micro
+              - generic [ref=e73]: 61 496 € /an
+            - tablist "Vues du simulateur" [ref=e74]:
+              - tab "Cascade" [selected] [ref=e75] [cursor=pointer]
+              - tab "Flux" [ref=e76] [cursor=pointer]
+              - tab "Cotisations" [ref=e77] [cursor=pointer]
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - generic [ref=e80]: Vous gardez
+                - generic [ref=e81]: 61 496 €/an
+                - generic [ref=e82]: 5 125 €/mois · 61.5% du CA
+                - generic [ref=e83]: Barème officiel 2026
+                - generic [ref=e84]: "Net après impôts: 61 496 euros"
+              - list "Décomposition de votre rémunération" [ref=e85]:
+                - 'button "Chiffre d''affaires: 100 000 euros, 100.0 pourcent du chiffre d''affaires" [ref=e87] [cursor=pointer]':
+                  - generic [ref=e88]:
+                    - generic [ref=e89]:
+                      - img [ref=e91]
+                      - generic [ref=e94]:
+                        - generic [ref=e95]: Chiffre d'affaires
+                        - generic [ref=e96]: Revenu brut annuel
+                    - generic [ref=e97]:
+                      - generic [ref=e98]: 100 000 €
+                      - generic [ref=e99]: 100.0%
+                - 'button "Cotisations sociales: 25 600 euros, 25.6 pourcent du chiffre d''affaires" [ref=e104] [cursor=pointer]':
+                  - generic [ref=e105]:
+                    - generic [ref=e106]:
+                      - img [ref=e108]
+                      - generic [ref=e110]:
+                        - generic [ref=e111]: Cotisations sociales
+                        - generic [ref=e112]: URSSAF micro BNC (25,6%)
+                    - generic [ref=e113]:
+                      - generic [ref=e114]: "- 25 600 €"
+                      - generic [ref=e115]: 25.6%
+                  - img [ref=e116]
+                  - region:
+                    - generic [ref=e121]:
+                      - generic [ref=e122]:
+                        - generic [ref=e123]:
+                          - generic [ref=e124]: Maladie
+                          - generic [ref=e125]: Couvert
+                        - generic [ref=e126]: 7 700 €
+                      - generic [ref=e127]:
+                        - generic [ref=e128]:
+                          - generic [ref=e129]: Retraite
+                          - generic [ref=e130]: Couverture partielle
+                        - generic [ref=e131]: 12 800 €
+                      - generic [ref=e132]:
+                        - generic [ref=e134]: CSG/CRDS
+                        - generic [ref=e135]: 5 100 €
+                      - generic [ref=e136]:
+                        - generic [ref=e137]:
+                          - generic [ref=e138]: Chômage
+                          - generic [ref=e139]: Non couvert
+                        - generic [ref=e140]: 0 €
+                - 'button "Impôt sur le revenu: 12 904 euros, 12.9 pourcent du chiffre d''affaires" [ref=e143] [cursor=pointer]':
+                  - generic [ref=e144]:
+                    - generic [ref=e145]:
+                      - img [ref=e147]
+                      - generic [ref=e149]:
+                        - generic [ref=e150]: Impôt sur le revenu
+                        - generic [ref=e151]: Barème progressif 2026
+                    - generic [ref=e152]:
+                      - generic [ref=e153]: "- 12 904 €"
+                      - generic [ref=e154]: 12.9%
+                - 'button "Net en poche: 61 496 euros, 61.5 pourcent du chiffre d''affaires" [ref=e159] [cursor=pointer]':
+                  - generic [ref=e160]:
+                    - generic [ref=e161]:
+                      - img [ref=e163]
+                      - generic [ref=e166]:
+                        - generic [ref=e167]: Net en poche
+                        - generic [ref=e168]: Après cotisations et impôts
+                    - generic [ref=e169]:
+                      - generic [ref=e170]: 61 496 €
+                      - generic [ref=e171]: 61.5%
+                  - img [ref=e172]
+                  - region:
+                    - generic [ref=e178]:
+                      - generic [ref=e179]:
+                        - generic [ref=e180]: Net mensuel
+                        - generic [ref=e181]: Disponible sur votre compte
+                      - generic [ref=e182]: 5 125 €
+              - generic [ref=e183]: ✓ Cotisations + Impôts + Net = 100 000 €
+    - contentinfo [ref=e184]:
+      - paragraph [ref=e185]: Simulateur à but pédagogique · Barème officiel 2026 · Les résultats sont indicatifs
+  - button "Open Next.js Dev Tools" [ref=e191] [cursor=pointer]:
+    - img [ref=e192]
+  - alert [ref=e195]

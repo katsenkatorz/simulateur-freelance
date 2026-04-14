@@ -95,35 +95,41 @@ export function Sidebar({
 
       {/* Stratégie */}
       <div>
-        <SectionLabel icon={Target}>Stratégie</SectionLabel>
+        <SectionLabel icon={Target}>Rémunération</SectionLabel>
         <div className="flex gap-1">
           {[
-            { v: "A", l: "Salaire" },
-            { v: "B", l: "Capitaliser" },
-          ].map(o => (
+            { v: "A", l: "Tout en salaire" },
+            { v: "B", l: "Garder en société" },
+          ].map(o => {
+            const isDisabled = o.v === "B" && sel === "micro";
+            return (
             <button
               key={o.v}
-              onClick={() => setGm(o.v)}
+              onClick={() => !isDisabled && setGm(o.v)}
+              disabled={isDisabled}
+              title={isDisabled ? "Non disponible en micro-entreprise" : undefined}
               className={cn(
                 "flex-1 py-2 rounded-md text-sm font-semibold transition-all duration-200 border",
-                gm === o.v
+                isDisabled
+                  ? "opacity-30 cursor-not-allowed text-text-tertiary border-border-subtle"
+                  : gm === o.v
                   ? "bg-text-primary/5 text-text-primary border-text-primary/20"
                   : "bg-transparent text-text-tertiary border-border-subtle hover:border-border-default"
               )}
             >
               {o.l}
             </button>
-          ))}
+          )})}
         </div>
       </div>
 
       {/* Seuil IS */}
       <div>
-        <SectionLabel icon={Scale}>Seuil IS 15%</SectionLabel>
+        <SectionLabel icon={Scale}>Taux IS réduit (15%)</SectionLabel>
         <div className="flex gap-1">
           {[
-            { v: false, l: "42 500 €" },
-            { v: true, l: "100 000 €" },
+            { v: false, l: "42 500 € (en vigueur)" },
+            { v: true, l: "100 000 € (PLF 2026)" },
           ].map(o => (
             <button
               key={String(o.v)}

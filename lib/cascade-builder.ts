@@ -96,8 +96,8 @@ export function buildCascadeItems(
   // 6. NET en poche
   items.push({
     icon: Wallet,
-    label: "Net en poche",
-    sublabel: "Après cotisations et impôts",
+    label: "Ce qui arrive sur votre compte",
+    sublabel: "Après toutes les cotisations et impôts",
     amount: sim.net,
     percentage: ca > 0 ? (sim.net / ca) * 100 : 0,
     type: "net",

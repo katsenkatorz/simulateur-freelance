@@ -274,7 +274,6 @@ export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
 
   const tabItems = [
     { k: "cascade", l: "Cascade" },
-    { k: "flow", l: "Flux" },
     { k: "cotis", l: "Cotisations" },
   ];
   if (isB) tabItems.push({ k: "capital", l: "Capital" });
@@ -301,16 +300,11 @@ export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
           <div className="max-w-[1000px] mx-auto">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6">
               <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
-                {(() => { const Icon = STRUCT_ICONS[st.id]; return Icon ? <Icon size={18} className="text-text-tertiary" /> : null; })()}
+                {(() => { const Icon = STRUCT_ICONS[st.id]; return Icon ? <Icon size={18} aria-hidden="true" className="text-text-tertiary" /> : null; })()}
                 {st.name}
-                <span className="text-sm text-text-tertiary font-normal">
-                </span>
               </h2>
-              <div className="text-sm font-mono text-text-secondary">
-                {fmt(sim.net)}<span className="text-text-tertiary"> /an</span>
-              </div>
             </div>
 
             {/* Tabs */}
@@ -339,10 +333,30 @@ export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
               <div className="space-y-6 max-w-[600px] mx-auto">
                 <HeroNet net={sim.net} ca={sel === "micro" ? mCA : ca} />
                 <CascadeFlow items={cascadeItems} />
-                <div className="text-center font-mono text-xs text-text-tertiary border border-dashed border-border-subtle rounded p-2.5">
+                <div className="text-center text-xs text-text-tertiary p-2">
                   <span className="text-positive">✓</span>{" "}
-                  Cotisations + Impôts + Net = {fmt(sel === "micro" ? mCA : ca)}
+                  Tous les euros sont comptabilisés — chaque euro du CA est alloué
                 </div>
+
+                {/* Comparison with other statuses */}
+                <div className="border border-border-subtle rounded-lg overflow-hidden">
+                  <div className="px-4 py-2.5 bg-bg-card text-xs font-medium text-text-secondary border-b border-border-subtle">
+                    Comparer les statuts
+                  </div>
+                  <div className="p-2">
+                    <ComparisonMini
+                      rows={structs.map(s => ({
+                        struct: s,
+                        icon: STRUCT_ICONS[s.id],
+                        ...getData(s.id),
+                        ca: s.id === "micro" ? mCA : ca,
+                      }))}
+                      selectedId={sel}
+                      onSelect={openD}
+                    />
+                  </div>
+                </div>
+
                 <FlowTrigger
                   showFlow={sel !== "micro" && !(sel === "ei" && regEI === "IR")}
                   sel={sel} sim={sim} isB={isB} accent={st.accent}
