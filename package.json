@@ -8,7 +8,10 @@
     "start": "next start",
     "deploy": "vercel deploy",
     "deploy:prod": "vercel --prod",
-    "logs": "vercel logs"
+    "logs": "vercel logs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
@@ -33,8 +36,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.4",
     "bmad-method": "^6.3.0",
     "tailwindcss": "^4.2.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.4"
   }
 }
