@@ -247,6 +247,23 @@ export function MobileControls({
             ))}
           </div>
         </div>
+        {/* IS threshold toggle — accessible on mobile */}
+        {sel !== "micro" && (
+          <div className="mt-2">
+            <button
+              onClick={() => setIsSeuilEtendu(!isSeuilEtendu)}
+              aria-label={isSeuilEtendu ? "Seuil IS 100k activé" : "Seuil IS standard 42.5k"}
+              className={cn(
+                "w-full py-1.5 rounded text-[10px] font-medium border transition-all",
+                isSeuilEtendu
+                  ? "bg-accent/10 text-accent border-accent/30"
+                  : "text-text-tertiary border-border-subtle"
+              )}
+            >
+              Seuil IS {isSeuilEtendu ? "100k (PLF 2026)" : "42,5k"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

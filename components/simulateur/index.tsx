@@ -274,7 +274,6 @@ export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
 
   const tabItems = [
     { k: "cascade", l: "Cascade" },
-    { k: "overview", l: "Synthèse" },
     { k: "flow", l: "Flux" },
     { k: "cotis", l: "Cotisations" },
   ];
