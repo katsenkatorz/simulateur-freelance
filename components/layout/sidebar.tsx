@@ -37,7 +37,7 @@ interface SidebarProps {
 function SectionLabel({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 text-[11px] font-medium text-text-tertiary uppercase tracking-wider mb-2">
-      <Icon size={12} />
+      <Icon size={12} aria-hidden="true" />
       {children}
     </div>
   );
@@ -238,11 +238,12 @@ export function MobileControls({
         <div>
           <div className="text-[10px] text-text-tertiary uppercase mb-1">Mode</div>
           <div className="flex gap-0.5">
-            {["A", "B"].map(v => (
+            {([["A", "Salaire"], ["B", "Capital"]] as const).map(([v, label]) => (
               <button key={v} onClick={() => setGm(v)}
+                aria-label={`Mode ${label}`}
                 className={cn("px-3 py-1.5 rounded text-xs font-semibold border",
                   gm === v ? "bg-text-primary text-bg-primary border-text-primary" : "text-text-tertiary border-border-subtle"
-                )}>{v}</button>
+                )}>{label}</button>
             ))}
           </div>
         </div>

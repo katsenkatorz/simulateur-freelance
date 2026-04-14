@@ -88,7 +88,7 @@ export function CascadeCard({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-md bg-white/5 flex items-center justify-center shrink-0">
-            <Icon size={16} className="text-text-secondary" />
+            <Icon size={16} className="text-text-secondary" aria-hidden="true" />
           </div>
           <div>
             <div className="text-sm font-medium text-text-secondary">{label}</div>

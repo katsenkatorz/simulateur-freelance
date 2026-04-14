@@ -9,7 +9,7 @@ const statuses = [
   { href: "/ei", label: "EI", color: "var(--color-ei)" },
   { href: "/eurl", label: "EURL", color: "var(--color-eurl)" },
   { href: "/sasu", label: "SASU", color: "var(--color-sasu)" },
-  { href: "/holding", label: "Holding", color: "var(--color-holding)" },
+  { href: "/holding", label: "SASU+Holding", color: "var(--color-holding)" },
 ]
 
 export function StatusNav() {

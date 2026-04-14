@@ -315,10 +315,13 @@ export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-0 border-b border-border-subtle mb-6">
+            <div role="tablist" aria-label="Vues du simulateur" className="flex gap-0 border-b border-border-subtle mb-6">
               {tabItems.map(t => (
                 <button
                   key={t.k}
+                  role="tab"
+                  aria-selected={tab === t.k}
+                  aria-controls={`panel-${t.k}`}
                   onClick={() => setTab(t.k)}
                   className={cn(
                     "px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer",
