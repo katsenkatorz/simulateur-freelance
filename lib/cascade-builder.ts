@@ -93,18 +93,8 @@ export function buildCascadeItems(
     })
   }
 
-  // 6. NET en poche
-  items.push({
-    icon: Wallet,
-    label: "Ce qui arrive sur votre compte",
-    sublabel: "Après toutes les cotisations et impôts",
-    amount: sim.net,
-    percentage: ca > 0 ? (sim.net / ca) * 100 : 0,
-    type: "net",
-    detail: [
-      { label: "Net mensuel", amount: Math.round(sim.net / 12), description: "Disponible sur votre compte" },
-    ],
-  })
+  // NET is shown by HeroNet above the cascade — not duplicated here
+  // The cascade shows only what is TAKEN (deductions), the destination is HeroNet
 
   return items
 }

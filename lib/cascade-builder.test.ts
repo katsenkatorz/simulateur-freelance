@@ -26,12 +26,10 @@ describe('buildCascadeItems', () => {
       expect(items[0].percentage).toBe(100)
     })
 
-    it('last item is always NET with type "net"', () => {
+    it('does NOT include a NET card (shown by HeroNet separately)', () => {
       const sim = simMicro(80000, 1, 42500)
       const items = buildCascadeItems(sim, mkMicro(80000), 80000)
-      const last = items[items.length - 1]
-      expect(last.type).toBe('net')
-      expect(last.amount).toBe(sim.net)
+      expect(items.find(i => i.type === 'net')).toBeUndefined()
     })
 
     it('includes charge item for cotisations', () => {
@@ -135,13 +133,12 @@ describe('buildCascadeItems', () => {
       }
     })
 
-    it('NET detail includes monthly amount', () => {
+    it('cascade contains only deduction types (ca, charge, tax) — no net', () => {
       const sim = simMicro(60000, 1, 42500)
       const items = buildCascadeItems(sim, mkMicro(60000), 60000)
-      const netItem = items.find(i => i.type === 'net')!
-      expect(netItem.detail).toBeDefined()
-      expect(netItem.detail!.length).toBeGreaterThanOrEqual(1)
-      expect(netItem.detail![0].label).toContain('mensuel')
+      for (const item of items) {
+        expect(['ca', 'charge', 'tax']).toContain(item.type)
+      }
     })
   })
 })
