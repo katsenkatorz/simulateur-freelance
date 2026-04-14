@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +41,8 @@ export default function RootLayout({
           Aller au contenu principal
         </a>
         <NuqsAdapter>{children}</NuqsAdapter>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
