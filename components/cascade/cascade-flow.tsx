@@ -48,15 +48,28 @@ export function CascadeFlow({ items, className }: CascadeFlowProps) {
     >
       {items.map((item, i) => (
         <li key={i} role="presentation" className="list-none">
-          {/* Connector line between cards */}
+          {/* Flow arrow between cards */}
           {i > 0 && (
             <div
-              className="w-0.5 h-3 lg:h-4 bg-border-subtle mx-auto transition-opacity duration-300"
+              className="flex justify-center transition-opacity duration-300"
               style={{
                 opacity: visible || reducedMotion ? 1 : 0,
                 transitionDelay: reducedMotion ? "0ms" : `${i * 80}ms`,
               }}
-            />
+            >
+              <svg width="24" height="28" viewBox="0 0 24 28" className="block" aria-hidden="true">
+                <defs>
+                  <linearGradient id={`flow-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={items[i-1]?.type === 'ca' ? 'var(--color-accent)' : items[i-1]?.type === 'charge' ? 'var(--color-negative)' : items[i-1]?.type === 'tax' ? 'var(--color-tax)' : 'var(--color-positive)'} stopOpacity="0.5" />
+                    <stop offset="100%" stopColor={item.type === 'charge' ? 'var(--color-negative)' : item.type === 'tax' ? 'var(--color-tax)' : item.type === 'net' ? 'var(--color-positive)' : 'var(--color-accent)'} stopOpacity="0.5" />
+                  </linearGradient>
+                </defs>
+                <line x1="12" y1="0" x2="12" y2="20" stroke={`url(#flow-grad-${i})`} strokeWidth="2">
+                  <animate attributeName="stroke-dashoffset" from="20" to="0" dur="0.8s" fill="freeze" />
+                </line>
+                <polygon points="7,18 17,18 12,26" fill={item.type === 'charge' ? 'var(--color-negative)' : item.type === 'tax' ? 'var(--color-tax)' : item.type === 'net' ? 'var(--color-positive)' : 'var(--color-accent)'} opacity="0.6" />
+              </svg>
+            </div>
           )}
 
           {/* Card with stagger */}

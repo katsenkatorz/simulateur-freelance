@@ -29,10 +29,10 @@ const TYPE_COLORS: Record<CascadeItemType, string> = {
 }
 
 const TYPE_TINTS: Record<CascadeItemType, string> = {
-  ca: "from-accent/[0.06]",
-  charge: "from-negative/[0.06]",
-  tax: "from-tax/[0.06]",
-  net: "from-positive/[0.06]",
+  ca: "from-accent/[0.10]",
+  charge: "from-negative/[0.10]",
+  tax: "from-tax/[0.10]",
+  net: "from-positive/[0.10]",
 }
 
 const TYPE_TEXT: Record<CascadeItemType, string> = {
@@ -69,7 +69,7 @@ export function CascadeCard({
         "rounded-lg border border-[#363636] p-4 lg:p-5 cursor-pointer",
         "transition-all duration-300",
         `bg-gradient-to-br ${TYPE_TINTS[type]} to-bg-card`,
-        "border-l-[3px]",
+        "border-l-4",
         isDimmed && "opacity-40",
         "hover:brightness-105",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
@@ -87,8 +87,11 @@ export function CascadeCard({
       {/* Header: icon + label + amount */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-white/5 flex items-center justify-center shrink-0">
-            <Icon size={16} className="text-text-secondary" aria-hidden="true" />
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: `color-mix(in srgb, ${TYPE_COLORS[type]} 12%, transparent)` }}
+          >
+            <Icon size={16} style={{ color: TYPE_COLORS[type] }} aria-hidden="true" />
           </div>
           <div>
             <div className="text-sm font-medium text-text-secondary">{label}</div>
@@ -117,7 +120,7 @@ export function CascadeCard({
       )}
 
       {/* Proportional bar */}
-      <div className="mt-3 h-1.5 bg-white/5 rounded-full overflow-hidden">
+      <div className="mt-3 h-2 bg-white/5 rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{

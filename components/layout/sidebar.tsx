@@ -63,7 +63,7 @@ export function Sidebar({
       {/* Card 1: Ma situation */}
       <div className="bg-bg-card border border-[#363636] rounded-lg p-4 space-y-4">
         <div className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">Ma situation</div>
-        <CurrencyInput label="CA annuel HT" value={ca} onChange={setCa} min={10_000} max={1_000_000} />
+        <CurrencyInput label="CA annuel HT" value={ca} onChange={setCa} min={10_000} max={sel === "micro" ? MICRO_CAP : 1_000_000} />
         {isCapped && sel === "micro" && (
           <p className="text-[11px] text-tax flex items-center gap-1">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-tax" />
@@ -82,7 +82,7 @@ export function Sidebar({
                 className={cn(
                   "flex-1 py-2 rounded-md text-sm font-semibold transition-all duration-200 border",
                   parts === p
-                    ? "bg-text-primary text-bg-primary border-text-primary"
+                    ? "bg-accent/15 text-accent border-accent/40"
                     : "bg-transparent text-text-tertiary border-border-subtle hover:border-border-default"
                 )}
               >
@@ -244,7 +244,7 @@ export function MobileControls({
             {[1, 1.5, 2, 2.5, 3].map(p => (
               <button key={p} onClick={() => setParts(p)}
                 className={cn("flex-1 py-1.5 rounded text-xs font-semibold border",
-                  parts === p ? "bg-text-primary text-bg-primary border-text-primary" : "text-text-tertiary border-border-subtle"
+                  parts === p ? "bg-accent/15 text-accent border-accent/40" : "text-text-tertiary border-border-subtle"
                 )}>{p}</button>
             ))}
           </div>
@@ -256,7 +256,7 @@ export function MobileControls({
               <button key={v} onClick={() => setGm(v)}
                 aria-label={`Mode ${label}`}
                 className={cn("px-3 py-1.5 rounded text-xs font-semibold border",
-                  gm === v ? "bg-text-primary text-bg-primary border-text-primary" : "text-text-tertiary border-border-subtle"
+                  gm === v ? "bg-accent/15 text-accent border-accent/40" : "text-text-tertiary border-border-subtle"
                 )}>{label}</button>
             ))}
           </div>
@@ -272,7 +272,7 @@ export function MobileControls({
               ].map(o => (
                 <button key={o.v} onClick={() => setCurrentRegime(o.v)}
                   className={cn("flex-1 py-1.5 rounded text-[10px] font-semibold border",
-                    currentRegime === o.v ? "bg-text-primary text-bg-primary border-text-primary" : "text-text-tertiary border-border-subtle"
+                    currentRegime === o.v ? "bg-accent/15 text-accent border-accent/40" : "text-text-tertiary border-border-subtle"
                   )}>{o.l}</button>
               ))}
             </div>

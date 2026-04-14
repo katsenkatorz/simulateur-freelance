@@ -1,6 +1,7 @@
 "use client"
 
 import { fmt } from "@/lib/utils"
+import { CheckCircle2 } from "lucide-react"
 
 export interface HeroNetProps {
   net: number
@@ -12,26 +13,30 @@ export function HeroNet({ net, ca, source = "Barème officiel 2026" }: HeroNetPr
   const pct = ca > 0 ? ((net / ca) * 100).toFixed(1) : "0.0"
 
   return (
-    <div className="text-center p-5 lg:p-6 bg-bg-card border border-[#363636] rounded-lg">
-      <div className="text-xs uppercase tracking-wider text-text-secondary">
-        Vous gardez
+    <div
+      className="text-center p-6 lg:p-8 rounded-xl border border-positive/30 bg-gradient-to-b from-positive/[0.06] to-transparent relative overflow-hidden"
+      style={{ boxShadow: "0 0 60px rgba(34,197,94,0.06), inset 0 1px 0 rgba(34,197,94,0.1)" }}
+    >
+      <CheckCircle2 size={20} className="text-positive mx-auto mb-2" aria-hidden="true" />
+      <div className="text-[10px] uppercase tracking-widest text-positive/70 font-medium">
+        Votre argent
       </div>
       <div
-        className="font-mono font-bold text-[32px] lg:text-[40px] text-positive mt-2"
+        className="font-mono font-bold text-[36px] lg:text-[48px] text-positive mt-1 leading-tight"
         aria-live="polite"
       >
-        {fmt(net)}<span className="text-lg lg:text-xl text-text-tertiary ml-1">/an</span>
+        {fmt(net)}
       </div>
-      <div className="font-mono text-sm text-text-secondary mt-1">
+      <div className="font-mono text-sm text-text-secondary mt-2">
         {fmt(Math.round(net / 12))}/mois · {pct}% du CA
       </div>
-      <div className="text-xs text-text-tertiary mt-2">
-        {source}
+      <div className="text-[10px] text-text-tertiary mt-3">
+        {source} · /an
       </div>
 
-      {/* sr-only live region for assertive NET announcement */}
+      {/* sr-only live region */}
       <div aria-live="assertive" aria-atomic className="sr-only">
-        Net après impôts: {Math.round(net).toLocaleString("fr-FR")} euros
+        Net après impôts: {Math.round(net).toLocaleString("fr-FR")} euros par an
       </div>
     </div>
   )
