@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur de Rémunération — Design Direction</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  :root {
+    --bg-primary: #09090b;
+    --bg-card: #18181b;
+    --bg-elevated: #27272a;
+    --border-subtle: #363636;
+    --border-default: #3f3f46;
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-tertiary: #71717a;
+    --accent: #6366f1;
+    --accent-hover: #818cf8;
+    --negative: #f43f5e;
+    --tax: #f59e0b;
+    --positive: #22c55e;
+    --micro: #60a5fa;
+    --ei: #2dd4bf;
+    --eurl: #34d399;
+    --sasu: #a78bfa;
+    --holding: #fbbf24;
+    --easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(9,9,11,0.9); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 12px 24px;
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  .nav-title { font-weight: 600; font-size: 14px; color: var(--text-secondary); margin-right: auto; }
+  .nav-btn {
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    color: var(--text-secondary); padding: 6px 14px; border-radius: 6px;
+    font-size: 13px; cursor: pointer; transition: all 200ms ease;
+    font-family: var(--font-sans);
+  }
+  .nav-btn:hover, .nav-btn.active { background: var(--bg-elevated); color: var(--text-primary); border-color: var(--accent); }
+
+  /* SECTIONS */
+  .section { display: none; padding: 32px 20px; max-width: 680px; margin: 0 auto; }
+  .section.active { display: block; }
+  .section-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .section-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 32px; line-height: 1.5; }
+
+  /* LANDING */
+  .landing-hero { text-align: center; padding: 80px 20px 40px; }
+  .landing-hero h1 { font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+  .landing-hero p { color: var(--text-secondary); font-size: 15px; max-width: 400px; margin: 0 auto 40px; line-height: 1.6; }
+  .profile-cards { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .profile-card {
+    background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px;
+    padding: 20px 24px; cursor: pointer; transition: all 200ms ease; min-width: 160px; text-align: center;
+  }
+  .profile-card:hover { border-color: var(--accent); background: var(--bg-elevated); transform: translateY(-2px); }
+  .profile-card .icon { font-size: 28px; margin-bottom: 8px; }
+  .profile-card .label { font-size: 14px; font-weight: 500; }
+  .profile-card .desc { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; }
+
+  /* CASCADE */
+  .cascade-container { display: flex; flex-direction: column; gap: 0; }
+
+  .cascade-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 300ms var(--easing);
+    opacity: 0; transform: translateY(12px);
+    position: relative;
+  }
+  .cascade-card.visible { opacity: 1; transform: translateY(0); }
+  .cascade-card:hover { background: #1f1f23; }
+  .cascade-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .cascade-card[data-type="ca"] { border-left-color: var(--micro); background: linear-gradient(135deg, rgba(96,165,250,0.06) 0%, var(--bg-card) 100%); }
+  .cascade-card[data-type="charge"] { border-left-color: var(--negative); background: linear-gradient(135deg, rgba(244,63,94,0.06) 0%, var(--bg-card) 100%); }
+  .cascade-card[data-type="tax"] { border-left-color: var(--tax); background: linear-gradient(135deg, rgba(245,158,11,0.06) 0%, var(--bg-card) 100%); }
+  .cascade-card[data-type="net"] { border-left-color: var(--positive); background: linear-gradient(135deg, rgba(34,197,94,0.06) 0%, var(--bg-card) 100%); }
+
+  .cascade-connector {
+    width: 2px; height: 16px; background: var(--border-subtle);
+    margin-left: 28px; opacity: 0; transition: opacity 300ms var(--easing);
+  }
+  .cascade-connector.visible { opacity: 1; }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .card-left { display: flex; align-items: center; gap: 10px; }
+  .card-icon { font-size: 16px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: rgba(255,255,255,0.05); }
+  .card-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+  .card-sublabel { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+  .card-amount { font-family: var(--font-mono); font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .card-pct { font-family: var(--font-mono); font-size: 12px; color: var(--text-tertiary); margin-top: 2px; text-align: right; }
+
+  .card-amount[data-type="charge"] { color: var(--negative); }
+  .card-amount[data-type="tax"] { color: var(--tax); }
+  .card-amount[data-type="net"] { color: var(--positive); }
+  .card-amount[data-type="ca"] { color: var(--text-primary); }
+
+  /* Bar */
+  .bar-container { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; margin-top: 12px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 600ms var(--easing); width: 0; }
+  .bar-fill[data-type="ca"] { background: var(--micro); }
+  .bar-fill[data-type="charge"] { background: var(--negative); }
+  .bar-fill[data-type="tax"] { background: var(--tax); }
+  .bar-fill[data-type="net"] { background: var(--positive); }
+
+  /* Detail panel */
+  .card-detail {
+    max-height: 0; overflow: hidden; transition: max-height 300ms var(--easing), opacity 200ms ease;
+    opacity: 0; margin-top: 0;
+  }
+  .cascade-card.expanded .card-detail { max-height: 300px; opacity: 1; margin-top: 16px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .detail-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 10px; background: rgba(255,255,255,0.03); border-radius: 4px;
+    font-size: 12px;
+  }
+  .detail-label { color: var(--text-secondary); }
+  .detail-value { font-family: var(--font-mono); font-weight: 500; color: var(--text-primary); }
+  .detail-desc { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+  .detail-divider { grid-column: 1 / -1; height: 1px; background: var(--border-subtle); margin: 4px 0; }
+
+  /* Hero NET */
+  .hero-net {
+    text-align: center; padding: 24px; margin-bottom: 24px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px;
+  }
+  .hero-net .label { font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .hero-net .amount { font-family: var(--font-mono); font-size: 36px; font-weight: 700; color: var(--positive); margin: 8px 0 4px; }
+  .hero-net .pct { font-family: var(--font-mono); font-size: 14px; color: var(--text-tertiary); }
+  .hero-net .delta { font-family: var(--font-mono); font-size: 13px; color: var(--accent); margin-top: 8px; }
+
+  /* Status selector */
+  .status-bar { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
+  .status-pill {
+    padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    cursor: pointer; transition: all 200ms ease; color: var(--text-secondary);
+  }
+  .status-pill:hover { border-color: var(--border-default); color: var(--text-primary); }
+  .status-pill.active { border-color: var(--micro); color: var(--micro); background: rgba(96,165,250,0.1); }
+  .status-pill[data-status="ei"].active { border-color: var(--ei); color: var(--ei); background: rgba(45,212,191,0.1); }
+  .status-pill[data-status="eurl"].active { border-color: var(--eurl); color: var(--eurl); background: rgba(52,211,153,0.1); }
+  .status-pill[data-status="sasu"].active { border-color: var(--sasu); color: var(--sasu); background: rgba(167,139,250,0.1); }
+  .status-pill[data-status="holding"].active { border-color: var(--holding); color: var(--holding); background: rgba(251,191,36,0.1); }
+
+  /* Input */
+  .input-group { margin-bottom: 24px; }
+  .input-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; display: block; }
+  .input-row { display: flex; align-items: center; gap: 12px; }
+  .ca-input {
+    font-family: var(--font-mono); font-size: 20px; font-weight: 700;
+    background: var(--bg-card); border: 1px solid var(--border-default);
+    color: var(--text-primary); padding: 10px 14px; border-radius: 6px;
+    width: 180px; outline: none;
+  }
+  .ca-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(99,102,241,0.2); }
+  .ca-suffix { font-size: 14px; color: var(--text-tertiary); }
+  .ca-slider {
+    width: 100%; margin-top: 8px; -webkit-appearance: none; appearance: none;
+    height: 6px; background: var(--border-subtle); border-radius: 3px; outline: none;
+  }
+  .ca-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--text-primary); border: 2px solid var(--border-default); cursor: pointer;
+  }
+
+  /* Invariant */
+  .invariant {
+    text-align: center; padding: 10px; margin-top: 16px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);
+    border: 1px dashed var(--border-subtle); border-radius: 4px;
+  }
+  .invariant .check { color: var(--positive); }
+
+  /* Comparison mini */
+  .comparison-section { margin-top: 32px; }
+  .comparison-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--text-secondary); }
+  .comparison-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .comp-card {
+    background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px;
+    padding: 12px 8px; text-align: center; cursor: pointer; transition: all 200ms ease;
+  }
+  .comp-card:hover { border-color: var(--border-default); }
+  .comp-card.active { border-color: var(--micro); }
+  .comp-name { font-size: 10px; font-weight: 500; color: var(--text-tertiary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .comp-net { font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
+  .comp-bar { height: 3px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .comp-bar-fill { height: 100%; border-radius: 2px; }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    .section { padding: 20px 16px; }
+    .hero-net .amount { font-size: 28px; }
+    .card-amount { font-size: 15px; }
+    .card-label { font-size: 12px; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .comparison-grid { grid-template-columns: repeat(3, 1fr); }
+    .profile-cards { flex-direction: column; align-items: center; }
+    .cascade-card { padding: 12px 16px; }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .cascade-card { opacity: 1 !important; transform: none !important; transition: none !important; }
+    .cascade-connector { opacity: 1 !important; transition: none !important; }
+    .bar-fill { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-title">Simulateur de Rémunération — Design Direction</span>
+  <button class="nav-btn active" onclick="showSection('landing')">Landing</button>
+  <button class="nav-btn" onclick="showSection('freelance')">Freelance (Micro)</button>
+  <button class="nav-btn" onclick="showSection('cdi')">CDI Employé</button>
+  <button class="nav-btn" onclick="showSection('mobile')">Mobile 375px</button>
+</nav>
+
+<!-- LANDING -->
+<section id="landing" class="section active">
+  <div class="landing-hero">
+    <h1>Où va votre argent ?</h1>
+    <p>Visualisez en un instant le parcours de chaque euro — du coût total à ce qui arrive dans votre poche.</p>
+    <div class="profile-cards">
+      <div class="profile-card" onclick="showSection('cdi')">
+        <div class="icon">👔</div>
+        <div class="label">Salarié(e)</div>
+        <div class="desc">CDI, CDD</div>
+      </div>
+      <div class="profile-card" onclick="showSection('freelance')">
+        <div class="icon">💼</div>
+        <div class="label">Indépendant(e)</div>
+        <div class="desc">Micro, EI, EURL, SASU</div>
+      </div>
+      <div class="profile-card">
+        <div class="icon">⚖️</div>
+        <div class="label">Comparer</div>
+        <div class="desc">CDI vs Freelance</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FREELANCE MICRO -->
+<section id="freelance" class="section">
+  <div class="input-group">
+    <label class="input-label">Chiffre d'affaires annuel HT</label>
+    <div class="input-row">
+      <input class="ca-input" type="text" value="80 000" id="ca-input">
+      <span class="ca-suffix">€ / an</span>
+    </div>
+    <input class="ca-slider" type="range" min="0" max="200000" value="80000" id="ca-slider">
+  </div>
+
+  <div class="status-bar">
+    <span class="status-pill active" data-status="micro">Micro BNC</span>
+    <span class="status-pill" data-status="ei">EI</span>
+    <span class="status-pill" data-status="eurl">EURL</span>
+    <span class="status-pill" data-status="sasu">SASU</span>
+    <span class="status-pill" data-status="holding">Holding</span>
+  </div>
+
+  <div class="hero-net">
+    <div class="label">Vous gardez</div>
+    <div class="amount" id="hero-amount">38 016 €</div>
+    <div class="pct">47.5% de votre CA</div>
+    <div class="delta">Barème officiel 2026 · 1 part fiscale</div>
+  </div>
+
+  <div class="cascade-container" id="cascade-freelance">
+    <!-- Cards injected by JS -->
+  </div>
+
+  <div class="invariant">
+    <span class="check">✓</span> Cotisations + Impôt + Net = 80 000 €
+  </div>
+
+  <div class="comparison-section">
+    <div class="comparison-title">Comparer les statuts</div>
+    <div class="comparison-grid" id="comparison-grid">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- CDI -->
+<section id="cdi" class="section">
+  <div class="input-group">
+    <label class="input-label">Salaire net mensuel</label>
+    <div class="input-row">
+      <input class="ca-input" type="text" value="2 800">
+      <span class="ca-suffix">€ / mois</span>
+    </div>
+    <input class="ca-slider" type="range" min="1000" max="8000" value="2800">
+  </div>
+
+  <div class="hero-net">
+    <div class="label">Coût total employeur</div>
+    <div class="amount" style="color: var(--text-primary);">4 872 €<span style="font-size:14px;color:var(--text-tertiary);"> / mois</span></div>
+    <div class="pct">Vous voyez 57% de ce que vous coûtez</div>
+  </div>
+
+  <div class="cascade-container" id="cascade-cdi">
+    <!-- Injected by JS -->
+  </div>
+
+  <div class="invariant">
+    <span class="check">✓</span> Cotisations patronales + salariales + IR + Net = 4 872 €/mois
+  </div>
+</section>
+
+<!-- MOBILE PREVIEW -->
+<section id="mobile" class="section" style="max-width: 375px; border: 1px solid var(--border-subtle); border-radius: 12px; margin-top: 20px;">
+  <div class="section-title" style="font-size: 14px; color: var(--text-tertiary); text-align: center; margin-bottom: 16px;">Aperçu mobile (375px)</div>
+
+  <div class="input-group">
+    <label class="input-label">CA annuel HT</label>
+    <div class="input-row">
+      <input class="ca-input" type="text" value="80 000" style="width: 140px; font-size: 16px;">
+      <span class="ca-suffix">€</span>
+    </div>
+    <input class="ca-slider" type="range" min="0" max="200000" value="80000">
+  </div>
+
+  <div class="status-bar" style="gap: 4px;">
+    <span class="status-pill active" style="font-size: 11px; padding: 4px 10px;">Micro</span>
+    <span class="status-pill" style="font-size: 11px; padding: 4px 10px;">EI</span>
+    <span class="status-pill" style="font-size: 11px; padding: 4px 10px;">EURL</span>
+    <span class="status-pill" style="font-size: 11px; padding: 4px 10px;">SASU</span>
+  </div>
+
+  <div class="hero-net" style="padding: 16px;">
+    <div class="label" style="font-size: 11px;">Vous gardez</div>
+    <div class="amount" style="font-size: 24px;">38 016 €</div>
+    <div class="pct" style="font-size: 11px;">47.5% de votre CA</div>
+  </div>
+
+  <div class="cascade-container" id="cascade-mobile"></div>
+</section>
+
+<script>
+const cascadeData = {
+  freelance: [
+    { type: 'ca', icon: '📥', label: 'Chiffre d\'affaires', sublabel: 'Revenu brut annuel', amount: 80000, pct: 100, detail: [] },
+    { type: 'charge', icon: '🏥', label: 'Cotisations sociales', sublabel: 'Retraite, maladie, allocations', amount: -20480, pct: 25.6, detail: [
+      { label: 'Retraite de base', value: '8 640 €', desc: 'Valide 4 trimestres/an' },
+      { label: 'Maladie-maternité', value: '5 120 €', desc: 'Couverture santé à 70%' },
+      { label: 'Allocations familiales', value: '2 560 €', desc: 'Prestations familiales' },
+      { label: 'CSG/CRDS', value: '4 160 €', desc: 'Contribution sociale généralisée' },
+    ]},
+    { type: 'charge', icon: '📋', label: 'Abattement forfaitaire BNC', sublabel: '34% du CA (frais professionnels)', amount: -27200, pct: 34, detail: [
+      { label: 'Abattement BNC', value: '27 200 €', desc: 'Déduit automatiquement du revenu imposable' },
+    ]},
+    { type: 'tax', icon: '🏛️', label: 'Impôt sur le revenu', sublabel: 'Barème progressif 2026, 1 part', amount: -21504, pct: 26.9, detail: [
+      { label: 'Tranche à 0%', value: '0 €', desc: 'Jusqu\'à 11 497 €' },
+      { label: 'Tranche à 11%', value: '3 023 €', desc: '11 497 – 29 315 €' },
+      { label: 'Tranche à 30%', value: '7 073 €', desc: '29 315 – 52 891 €' },
+      { label: 'Tranche à 41%', value: '11 408 €', desc: 'Au-delà' },
+    ]},
+    { type: 'net', icon: '💰', label: 'Net en poche', sublabel: 'Après cotisations et impôt', amount: 38016, pct: 47.5, detail: [
+      { label: 'Net mensuel', value: '3 168 €', desc: 'Disponible sur votre compte' },
+      { label: 'Taux de prélèvement effectif', value: '52.5%', desc: 'Total des prélèvements' },
+    ]},
+  ],
+  cdi: [
+    { type: 'ca', icon: '🏢', label: 'Coût employeur total', sublabel: 'Ce que votre entreprise paie', amount: 58464, pct: 100, detail: [] },
+    { type: 'charge', icon: '🏥', label: 'Cotisations patronales', sublabel: 'Retraite, maladie, chômage, AT', amount: -21864, pct: 37.4, detail: [
+      { label: 'Assurance maladie', value: '4 680 €', desc: 'Couverture santé employeur' },
+      { label: 'Retraite complémentaire', value: '5 040 €', desc: 'AGIRC-ARRCO part patronale' },
+      { label: 'Assurance chômage', value: '2 736 €', desc: '57% du brut pendant 2 ans max' },
+      { label: 'Allocations familiales', value: '1 944 €', desc: 'Prestations familiales' },
+    ]},
+    { type: 'charge', icon: '📋', label: 'Cotisations salariales', sublabel: 'Retraite, CSG, maladie', amount: -8400, pct: 14.4, detail: [
+      { label: 'CSG déductible', value: '2 880 €', desc: 'Contribution sociale' },
+      { label: 'Retraite complémentaire', value: '2 520 €', desc: 'AGIRC-ARRCO part salariale' },
+      { label: 'Assurance vieillesse', value: '1 800 €', desc: 'Retraite de base' },
+    ]},
+    { type: 'tax', icon: '🏛️', label: 'Impôt sur le revenu', sublabel: 'Barème progressif, 1 part', amount: -5400, pct: 9.2, detail: [
+      { label: 'Tranche à 11%', value: '1 980 €', desc: '11 497 – 29 315 €' },
+      { label: 'Tranche à 30%', value: '3 420 €', desc: '29 315 – 40 800 €' },
+    ]},
+    { type: 'net', icon: '💰', label: 'Net sur votre compte', sublabel: 'Ce que vous voyez chaque mois', amount: 33600, pct: 57.5, detail: [
+      { label: 'Net mensuel', value: '2 800 €', desc: 'Virement sur votre compte' },
+      { label: 'Votre coût réel', value: '4 872 €/mois', desc: 'Ce que votre employeur dépense' },
+    ]},
+  ]
+};
+
+const comparisonData = [
+  { name: 'Micro', net: 38016, pct: 47.5, color: 'var(--micro)' },
+  { name: 'EI', net: 35200, pct: 44.0, color: 'var(--ei)' },
+  { name: 'EURL', net: 36800, pct: 46.0, color: 'var(--eurl)' },
+  { name: 'SASU', net: 31200, pct: 39.0, color: 'var(--sasu)' },
+  { name: 'Holding', net: 39600, pct: 49.5, color: 'var(--holding)' },
+];
+
+function fmt(n) {
+  return Math.abs(n).toLocaleString('fr-FR');
+}
+
+function renderCascade(containerId, data) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+
+  data.forEach((item, i) => {
+    if (i > 0) {
+      const conn = document.createElement('div');
+      conn.className = 'cascade-connector';
+      container.appendChild(conn);
+      setTimeout(() => conn.classList.add('visible'), 100 + i * 80);
+    }
+
+    const card = document.createElement('div');
+    card.className = 'cascade-card';
+    card.dataset.type = item.type;
+    card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-expanded', 'false');
+    card.setAttribute('aria-label', `${item.label}: ${fmt(item.amount)} euros, ${item.pct}% du chiffre d'affaires`);
+
+    const prefix = item.amount < 0 ? '- ' : '';
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-left">
+          <div class="card-icon">${item.icon}</div>
+          <div>
+            <div class="card-label">${item.label}</div>
+            <div class="card-sublabel">${item.sublabel}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="card-amount" data-type="${item.type}">${prefix}${fmt(item.amount)} €</div>
+          <div class="card-pct">${item.pct}%</div>
+        </div>
+      </div>
+      <div class="bar-container">
+        <div class="bar-fill" data-type="${item.type}" id="bar-${containerId}-${i}"></div>
+      </div>
+      ${item.detail.length > 0 ? `
+        <div class="card-detail">
+          <div class="detail-grid">
+            ${item.detail.map(d => `
+              <div class="detail-row">
+                <div>
+                  <div class="detail-label">${d.label}</div>
+                  <div class="detail-desc">${d.desc}</div>
+                </div>
+                <div class="detail-value">${d.value}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+    `;
+
+    card.addEventListener('click', () => {
+      const wasExpanded = card.classList.contains('expanded');
+      container.querySelectorAll('.cascade-card').forEach(c => {
+        c.classList.remove('expanded');
+        c.setAttribute('aria-expanded', 'false');
+      });
+      if (!wasExpanded && item.detail.length > 0) {
+        card.classList.add('expanded');
+        card.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    container.appendChild(card);
+
+    setTimeout(() => {
+      card.classList.add('visible');
+      const bar = document.getElementById(`bar-${containerId}-${i}`);
+      if (bar) bar.style.width = `${item.pct}%`;
+    }, 100 + i * 80);
+  });
+}
+
+function renderComparison() {
+  const grid = document.getElementById('comparison-grid');
+  if (!grid) return;
+  grid.innerHTML = comparisonData.map((c, i) => `
+    <div class="comp-card ${i === 0 ? 'active' : ''}" style="${i === 0 ? `border-color: ${c.color}` : ''}">
+      <div class="comp-name">${c.name}</div>
+      <div class="comp-net" style="color: ${c.color}">${fmt(c.net)} €</div>
+      <div class="comp-bar"><div class="comp-bar-fill" style="width: ${c.pct}%; background: ${c.color}"></div></div>
+    </div>
+  `).join('');
+}
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector(`.nav-btn[onclick="showSection('${id}')"]`)?.classList.add('active');
+
+  if (id === 'freelance') {
+    renderCascade('cascade-freelance', cascadeData.freelance);
+    renderComparison();
+  }
+  if (id === 'cdi') {
+    renderCascade('cascade-cdi', cascadeData.cdi);
+  }
+  if (id === 'mobile') {
+    renderCascade('cascade-mobile', cascadeData.freelance);
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture Decisions — Demo Visuelle</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+  :root {
+    --bg: #09090b; --card: #18181b; --elevated: #27272a;
+    --border: #27272a; --border-active: #6366f1;
+    --text: #fafafa; --text2: #a1a1aa; --text3: #71717a;
+    --accent: #6366f1; --green: #22c55e; --rose: #f43f5e; --amber: #f59e0b;
+    --micro: #60a5fa; --ei: #2dd4bf; --eurl: #34d399; --sasu: #a78bfa; --holding: #fbbf24;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .subtitle { color: var(--text2); font-size: 14px; margin-bottom: 40px; line-height: 1.5; }
+
+  /* Decision blocks */
+  .decision { margin-bottom: 48px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .decision-header { padding: 20px 24px; background: var(--card); border-bottom: 1px solid var(--border); }
+  .decision-header h2 { font-size: 18px; font-weight: 600; }
+  .decision-header p { color: var(--text2); font-size: 13px; margin-top: 4px; }
+  .decision-body { padding: 24px; }
+
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .options { grid-template-columns: 1fr; } }
+
+  .option {
+    border: 2px solid var(--border); border-radius: 8px; padding: 20px;
+    cursor: pointer; transition: all 200ms ease; position: relative;
+  }
+  .option:hover { border-color: var(--text3); background: rgba(255,255,255,0.02); }
+  .option.selected { border-color: var(--accent); background: rgba(99,102,241,0.08); }
+  .option.recommended::after {
+    content: 'Recommandé'; position: absolute; top: -1px; right: 12px;
+    background: var(--accent); color: white; font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 0 0 4px 4px;
+  }
+  .option-title { font-weight: 600; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .option-title .badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+  .option-desc { color: var(--text2); font-size: 13px; line-height: 1.5; }
+  .option-preview { margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text3); white-space: pre; overflow-x: auto; }
+  .option-pros { margin-top: 12px; font-size: 12px; }
+  .option-pros li { color: var(--text2); margin-bottom: 4px; list-style: none; }
+  .option-pros li::before { content: '✓ '; color: var(--green); }
+  .option-cons li::before { content: '✗ '; color: var(--rose); }
+
+  /* Visual demos */
+  .demo-nav { display: flex; gap: 6px; margin-top: 16px; flex-wrap: wrap; }
+  .pill {
+    padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border); color: var(--text2); cursor: pointer; transition: all 200ms;
+    text-decoration: none;
+  }
+  .pill:hover { border-color: var(--text3); color: var(--text); }
+  .pill.active-micro { border-color: var(--micro); color: var(--micro); background: rgba(96,165,250,0.1); }
+  .pill.active-sasu { border-color: var(--sasu); color: var(--sasu); background: rgba(167,139,250,0.1); }
+  .pill.active-ei { border-color: var(--ei); color: var(--ei); background: rgba(45,212,191,0.1); }
+
+  /* Route demo */
+  .browser-bar {
+    background: #1a1a2e; border-radius: 8px 8px 0 0; padding: 8px 12px;
+    display: flex; align-items: center; gap: 8px; font-size: 12px;
+  }
+  .browser-dots { display: flex; gap: 4px; }
+  .browser-dots span { width: 8px; height: 8px; border-radius: 50%; }
+  .browser-dots .r { background: #ff5f56; } .browser-dots .y { background: #ffbd2e; } .browser-dots .g { background: #27c93f; }
+  .browser-url { background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 4px; color: var(--text2); flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .browser-content { background: var(--card); border-radius: 0 0 8px 8px; padding: 16px; border: 1px solid var(--border); border-top: 0; min-height: 120px; }
+
+  /* Transition demos */
+  .transition-demo { display: flex; gap: 16px; margin-top: 16px; }
+  .transition-box {
+    flex: 1; padding: 16px; border-radius: 8px; background: var(--card); border: 1px solid var(--border);
+    text-align: center; font-size: 13px;
+  }
+  .transition-box .label { color: var(--text3); font-size: 11px; margin-bottom: 8px; }
+  .transition-box .amount { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; }
+
+  /* Summary */
+  .summary { margin-top: 48px; padding: 24px; background: var(--card); border-radius: 12px; border: 1px solid var(--border); }
+  .summary h2 { font-size: 18px; margin-bottom: 16px; }
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 640px) { .summary-grid { grid-template-columns: 1fr; } }
+  .summary-item { padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; }
+  .summary-item .q { font-size: 12px; color: var(--text3); margin-bottom: 4px; }
+  .summary-item .a { font-size: 14px; font-weight: 600; color: var(--accent); }
+  .summary-item .a.pending { color: var(--text3); font-style: italic; }
+
+  #submit-btn {
+    margin-top: 24px; padding: 12px 32px; background: var(--accent); color: white;
+    border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 200ms; width: 100%;
+  }
+  #submit-btn:hover { background: #818cf8; }
+  #submit-btn:disabled { background: var(--text3); cursor: not-allowed; }
+  #result { margin-top: 16px; padding: 16px; background: rgba(34,197,94,0.1); border: 1px solid var(--green); border-radius: 8px; display: none; }
+  #result pre { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--green); white-space: pre-wrap; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Architecture v2 — Décisions</h1>
+  <p class="subtitle">Clique sur l'option que tu préfères pour chaque décision. Le résumé se met à jour en bas.</p>
+
+  <!-- DECISION 1: Routing -->
+  <div class="decision" id="d1">
+    <div class="decision-header">
+      <h2>1. Routing — Comment organiser les pages ?</h2>
+      <p>Chaque statut a sa propre URL. Mais comment structurer les routes dans Next.js ?</p>
+    </div>
+    <div class="decision-body">
+      <div class="options">
+        <div class="option recommended" onclick="select('d1','a')" id="d1a">
+          <div class="option-title">A — Route groups</div>
+          <div class="option-desc">Les statuts freelance partagent un layout (header, sidebar). Les salariés ont le leur.</div>
+          <div class="option-preview">app/
+├── (freelance)/
+│   ├── layout.tsx    ← header + sidebar freelance
+│   ├── micro/page.tsx   → /micro
+│   ├── ei/page.tsx      → /ei
+│   ├── sasu/page.tsx    → /sasu
+│   ├── holding/page.tsx → /holding
+│   └── comparer/page.tsx
+├── (salarie)/
+│   ├── layout.tsx    ← header + sidebar salarié
+│   ├── salarie/page.tsx → /salarie
+│   └── portage/page.tsx → /portage
+└── page.tsx          → / (landing)</div>
+          <ul class="option-pros">
+            <li>Layout partagé par groupe (DRY)</li>
+            <li>(freelance) invisible dans l'URL</li>
+            <li>Chaque groupe a son propre header/sidebar</li>
+          </ul>
+        </div>
+        <div class="option" onclick="select('d1','b')" id="d1b">
+          <div class="option-title">B — Routes plates</div>
+          <div class="option-desc">Toutes les routes au même niveau, layout unique global.</div>
+          <div class="option-preview">app/
+├── micro/page.tsx    → /micro
+├── ei/page.tsx       → /ei
+├── sasu/page.tsx     → /sasu
+├── holding/page.tsx  → /holding
+├── salarie/page.tsx  → /salarie
+├── portage/page.tsx  → /portage
+├── comparer/page.tsx → /comparer
+├── layout.tsx        ← un seul layout
+└── page.tsx          → / (landing)</div>
+          <ul class="option-pros">
+            <li>Plus simple (pas de route groups)</li>
+            <li>Moins de fichiers layout</li>
+          </ul>
+          <ul class="option-pros option-cons">
+            <li>Pas de layout spécifique par type</li>
+            <li>Header/sidebar identique CDI et freelance</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISION 2: Status Navigation -->
+  <div class="decision" id="d2">
+    <div class="decision-header">
+      <h2>2. Navigation entre statuts — Tabs ou Links ?</h2>
+      <p>Quand l'utilisateur veut passer de /micro à /sasu, comment ça marche visuellement ?</p>
+    </div>
+    <div class="decision-body">
+      <div class="options">
+        <div class="option recommended" onclick="select('d2','a')" id="d2a">
+          <div class="option-title">A — Pills-as-Links + transition</div>
+          <div class="option-desc">Les pills sont des <code>&lt;Link&gt;</code> Next.js. Navigation client-side rapide (~200ms). Skeleton animation pendant le chargement.</div>
+          <div>
+            <div class="demo-nav">
+              <span class="pill active-micro">Micro</span>
+              <span class="pill">EI</span>
+              <span class="pill">EURL</span>
+              <span class="pill" style="opacity:0.5">→ clique →</span>
+              <span class="pill active-sasu">SASU</span>
+            </div>
+            <div style="margin-top:12px">
+              <div class="browser-bar">
+                <div class="browser-dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+                <div class="browser-url">simulateur-freelance.vercel.app<strong>/sasu</strong>?ca=100000&parts=2</div>
+              </div>
+              <div class="browser-content">
+                <div style="color:var(--text3);font-size:12px;margin-bottom:8px">Navigation instantanée, URL change, skeleton 200ms puis cascade</div>
+                <div style="display:flex;gap:8px">
+                  <div style="flex:1;height:24px;background:var(--sasu);opacity:0.3;border-radius:4px"></div>
+                  <div style="flex:1;height:24px;background:var(--sasu);opacity:0.5;border-radius:4px"></div>
+                  <div style="flex:1;height:24px;background:var(--sasu);opacity:0.8;border-radius:4px"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ul class="option-pros" style="margin-top:12px">
+            <li>URL propre par statut (SEO)</li>
+            <li>Back button fonctionne</li>
+            <li>Skeleton comble le gap visuel</li>
+          </ul>
+          <ul class="option-pros option-cons">
+            <li>Pas de morph fluide entre statuts</li>
+          </ul>
+        </div>
+        <div class="option" onclick="select('d2','b')" id="d2b">
+          <div class="option-title">B — Tabs-as-State (pas de routing)</div>
+          <div class="option-desc">Les pills changent l'état local. Morph fluide de la cascade. Mais l'URL ne change pas de route.</div>
+          <div>
+            <div class="demo-nav">
+              <span class="pill active-micro">Micro</span>
+              <span class="pill">EI</span>
+              <span class="pill">EURL</span>
+              <span class="pill active-sasu">SASU ←</span>
+            </div>
+            <div style="margin-top:12px">
+              <div class="browser-bar">
+                <div class="browser-dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+                <div class="browser-url">simulateur-freelance.vercel.app<strong>/freelance</strong>?statut=sasu&ca=100000</div>
+              </div>
+              <div class="browser-content">
+                <div style="color:var(--text3);font-size:12px;margin-bottom:8px">Morph instantané, cascade s'anime en place, 0ms</div>
+                <div style="display:flex;gap:8px">
+                  <div style="flex:1;height:24px;background:var(--sasu);border-radius:4px"></div>
+                  <div style="flex:1;height:24px;background:var(--sasu);border-radius:4px"></div>
+                  <div style="flex:1;height:24px;background:var(--sasu);border-radius:4px"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ul class="option-pros" style="margin-top:12px">
+            <li>Morph fluide cascade (wow)</li>
+            <li>0ms de transition</li>
+          </ul>
+          <ul class="option-pros option-cons">
+            <li>URL moins propre (?statut=sasu)</li>
+            <li>SEO : une seule page pour 5 statuts</li>
+            <li>Pas de back button entre statuts</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISION 3: Comparison -->
+  <div class="decision" id="d3">
+    <div class="decision-header">
+      <h2>3. Page de comparaison — Quel format ?</h2>
+      <p>Thomas veut comparer Micro vs SASU rapidement. Léo veut CDI vs Portage vs SASU.</p>
+    </div>
+    <div class="decision-body">
+      <div class="options">
+        <div class="option recommended" onclick="select('d3','a')" id="d3a">
+          <div class="option-title">A — Cascades côte à côte</div>
+          <div class="option-desc">Desktop : 2-3 cascades en colonnes. Mobile : tabs swipeable.</div>
+          <div class="transition-demo">
+            <div class="transition-box" style="border-top:3px solid var(--micro)">
+              <div class="label">MICRO</div>
+              <div class="amount" style="color:var(--green)">47 520 €</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">59.4%</div>
+            </div>
+            <div class="transition-box" style="border-top:3px solid var(--sasu)">
+              <div class="label">SASU</div>
+              <div class="amount" style="color:var(--green)">38 400 €</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">48.0%</div>
+            </div>
+            <div class="transition-box" style="border-top:3px solid var(--holding)">
+              <div class="label">HOLDING</div>
+              <div class="amount" style="color:var(--green)">51 200 €</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">64.0%</div>
+            </div>
+          </div>
+          <ul class="option-pros" style="margin-top:12px">
+            <li>Comparaison visuelle instantanée</li>
+            <li>Même CA appliqué partout</li>
+            <li>Delta visible entre colonnes</li>
+          </ul>
+        </div>
+        <div class="option" onclick="select('d3','b')" id="d3b">
+          <div class="option-title">B — Tableau comparatif</div>
+          <div class="option-desc">Un tableau avec les statuts en colonnes et les métriques en lignes.</div>
+          <div style="margin-top:16px;font-size:12px;overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse">
+              <thead><tr style="border-bottom:1px solid var(--border)">
+                <th style="text-align:left;padding:6px;color:var(--text3)">Métrique</th>
+                <th style="padding:6px;color:var(--micro)">Micro</th>
+                <th style="padding:6px;color:var(--sasu)">SASU</th>
+                <th style="padding:6px;color:var(--holding)">Holding</th>
+              </tr></thead>
+              <tbody style="font-family:'JetBrains Mono',monospace">
+                <tr><td style="padding:6px;color:var(--text2)">Cotisations</td><td style="padding:6px;text-align:center">20 480€</td><td style="padding:6px;text-align:center">35 200€</td><td style="padding:6px;text-align:center">28 800€</td></tr>
+                <tr><td style="padding:6px;color:var(--text2)">Impôts</td><td style="padding:6px;text-align:center">12 000€</td><td style="padding:6px;text-align:center">6 400€</td><td style="padding:6px;text-align:center">0€</td></tr>
+                <tr style="border-top:1px solid var(--border)"><td style="padding:6px;color:var(--text2);font-weight:600">NET</td><td style="padding:6px;text-align:center;color:var(--green);font-weight:700">47 520€</td><td style="padding:6px;text-align:center;color:var(--green);font-weight:700">38 400€</td><td style="padding:6px;text-align:center;color:var(--green);font-weight:700">51 200€</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <ul class="option-pros" style="margin-top:12px">
+            <li>Dense, beaucoup d'info en peu d'espace</li>
+            <li>Facile à scanner ligne par ligne</li>
+          </ul>
+          <ul class="option-pros option-cons">
+            <li>Pas de cascade visuelle (juste des chiffres)</li>
+            <li>Moins "wow", plus Excel</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISION 4: Transition UX -->
+  <div class="decision" id="d4">
+    <div class="decision-header">
+      <h2>4. Transition entre pages — Quel effet ?</h2>
+      <p>Quand l'utilisateur navigue de /micro à /sasu, que voit-il ?</p>
+    </div>
+    <div class="decision-body">
+      <div class="options">
+        <div class="option recommended" onclick="select('d4','a')" id="d4a">
+          <div class="option-title">A — Fade + stagger cascade</div>
+          <div class="option-desc">La zone cascade fait un fade rapide (100ms), puis les nouvelles cartes apparaissent en stagger (80ms chaque). Header/sidebar restent fixes.</div>
+          <div style="margin-top:16px;text-align:center">
+            <div style="display:flex;gap:4px;justify-content:center;align-items:end;height:60px">
+              <div style="width:40px;background:var(--micro);opacity:0.3;height:50px;border-radius:4px;transition:all 300ms" class="fade-demo"></div>
+              <div style="width:8px"></div>
+              <div style="width:40px;background:var(--sasu);height:20px;border-radius:4px;animation:grow 600ms ease-out"></div>
+              <div style="width:40px;background:var(--sasu);height:35px;border-radius:4px;animation:grow 600ms ease-out 80ms backwards"></div>
+              <div style="width:40px;background:var(--sasu);height:50px;border-radius:4px;animation:grow 600ms ease-out 160ms backwards"></div>
+              <div style="width:40px;background:var(--green);height:55px;border-radius:4px;animation:grow 600ms ease-out 240ms backwards"></div>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:8px">/micro fade out → /sasu cascade stagger in</div>
+          </div>
+          <ul class="option-pros" style="margin-top:12px">
+            <li>Sensation de continuité</li>
+            <li>Stagger = "les données arrivent"</li>
+            <li>Header stable = pas de saut</li>
+          </ul>
+        </div>
+        <div class="option" onclick="select('d4','b')" id="d4b">
+          <div class="option-title">B — Cut direct (pas de transition)</div>
+          <div class="option-desc">Le contenu change instantanément. Pas d'animation entre pages. Simple et rapide.</div>
+          <div style="margin-top:16px;text-align:center">
+            <div style="display:flex;gap:4px;justify-content:center;align-items:end;height:60px">
+              <div style="width:40px;background:var(--sasu);height:20px;border-radius:4px"></div>
+              <div style="width:40px;background:var(--sasu);height:35px;border-radius:4px"></div>
+              <div style="width:40px;background:var(--sasu);height:50px;border-radius:4px"></div>
+              <div style="width:40px;background:var(--green);height:55px;border-radius:4px"></div>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:8px">Tout apparaît d'un coup, 0ms</div>
+          </div>
+          <ul class="option-pros" style="margin-top:12px">
+            <li>Le plus rapide possible</li>
+            <li>Zéro complexité d'animation</li>
+          </ul>
+          <ul class="option-pros option-cons">
+            <li>Sensation de "saut" entre pages</li>
+            <li>Moins premium</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISION 5: @xyflow trigger -->
+  <div class="decision" id="d5">
+    <div class="decision-header">
+      <h2>5. Flow pédagogique — Quand l'afficher ?</h2>
+      <p>Le schéma animé @xyflow (le "wow") apparaît quand exactement ?</p>
+    </div>
+    <div class="decision-body">
+      <div class="options">
+        <div class="option recommended" onclick="select('d5','a')" id="d5a">
+          <div class="option-title">A — Bouton contextuel dans la cascade</div>
+          <div class="option-desc">Un bouton discret "Comprendre la mécanique" apparaît sous la cascade, uniquement pour les statuts complexes (SASU, Holding, EURL+IS).</div>
+          <div style="margin-top:16px;padding:16px;background:var(--card);border-radius:8px;border:1px solid var(--border)">
+            <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Après la cascade NET...</div>
+            <div style="text-align:center;padding:12px;border:1px dashed var(--border);border-radius:6px;cursor:pointer;transition:all 200ms" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <span style="color:var(--accent);font-size:13px">🔍 Comprendre la mécanique</span>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">Voir comment l'argent circule dans la structure</div>
+            </div>
+          </div>
+          <ul class="option-pros" style="margin-top:12px">
+            <li>Pas intrusif — l'utilisateur choisit</li>
+            <li>Lazy-load (0KB initial)</li>
+            <li>Contextuel : pas visible pour Micro</li>
+          </ul>
+        </div>
+        <div class="option" onclick="select('d5','b')" id="d5b">
+          <div class="option-title">B — Onglet permanent "Architecture"</div>
+          <div class="option-desc">Un onglet fixe à côté de "Cascade" permet de basculer à tout moment.</div>
+          <div style="margin-top:16px">
+            <div class="demo-nav">
+              <span class="pill active-micro" style="border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,0.1)">Cascade</span>
+              <span class="pill">Architecture</span>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:var(--text3)">Toujours visible, même pour Micro (même si le flow est simple)</div>
+          </div>
+          <ul class="option-pros" style="margin-top:12px">
+            <li>Toujours accessible</li>
+            <li>Découvrable facilement</li>
+          </ul>
+          <ul class="option-pros option-cons">
+            <li>Inutile pour Micro (flow trivial)</li>
+            <li>Charge cognitive supplémentaire</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary">
+    <h2>Résumé de tes choix</h2>
+    <div class="summary-grid">
+      <div class="summary-item"><div class="q">1. Routing</div><div class="a pending" id="s1">—</div></div>
+      <div class="summary-item"><div class="q">2. Navigation statuts</div><div class="a pending" id="s2">—</div></div>
+      <div class="summary-item"><div class="q">3. Comparaison</div><div class="a pending" id="s3">—</div></div>
+      <div class="summary-item"><div class="q">4. Transition</div><div class="a pending" id="s4">—</div></div>
+      <div class="summary-item"><div class="q">5. Flow pédagogique</div><div class="a pending" id="s5">—</div></div>
+    </div>
+    <button id="submit-btn" disabled onclick="showResult()">Valider mes choix</button>
+    <div id="result"><pre id="result-text"></pre></div>
+  </div>
+</div>
+
+<style>
+  @keyframes grow { from { height: 0; opacity: 0; } to { opacity: 1; } }
+</style>
+
+<script>
+const choices = {};
+const labels = {
+  d1: { a: 'Route groups (freelance)/(salarie)', b: 'Routes plates' },
+  d2: { a: 'Pills-as-Links + skeleton', b: 'Tabs-as-State (morph)' },
+  d3: { a: 'Cascades côte à côte', b: 'Tableau comparatif' },
+  d4: { a: 'Fade + stagger cascade', b: 'Cut direct' },
+  d5: { a: 'Bouton contextuel', b: 'Onglet permanent' },
+};
+
+function select(decision, option) {
+  // Deselect all in this decision
+  document.querySelectorAll(`#${decision} .option`).forEach(o => o.classList.remove('selected'));
+  // Select chosen
+  document.getElementById(`${decision}${option}`).classList.add('selected');
+  choices[decision] = option;
+
+  // Update summary
+  const num = decision.replace('d', '');
+  const el = document.getElementById(`s${num}`);
+  el.textContent = labels[decision][option];
+  el.classList.remove('pending');
+
+  // Check if all decided
+  if (Object.keys(choices).length === 5) {
+    document.getElementById('submit-btn').disabled = false;
+  }
+}
+
+function showResult() {
+  const result = document.getElementById('result');
+  const text = document.getElementById('result-text');
+  result.style.display = 'block';
+
+  let output = '✅ Décisions validées !\n\n';
+  for (const [key, val] of Object.entries(choices)) {
+    const num = key.replace('d', '');
+    output += `${num}. ${labels[key][val]}\n`;
+  }
+  output += '\nCopie ce résumé et colle-le dans le chat pour que j\'intègre tes choix dans l\'architecture.';
+  text.textContent = output;
+}
+</script>
+</body>
+</html>
