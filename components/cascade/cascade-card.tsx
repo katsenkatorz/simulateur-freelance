@@ -66,7 +66,7 @@ export function CascadeCard({
       aria-controls={`cascade-detail-${index}`}
       aria-label={`${label}: ${Math.abs(amount).toLocaleString("fr-FR")} euros, ${percentage.toFixed(1)} pourcent du chiffre d'affaires`}
       className={cn(
-        "rounded-md border border-[#363636] p-4 lg:p-5 cursor-pointer",
+        "rounded-lg border border-[#363636] p-4 lg:p-5 cursor-pointer",
         "transition-all duration-300",
         `bg-gradient-to-br ${TYPE_TINTS[type]} to-bg-card`,
         "border-l-[3px]",

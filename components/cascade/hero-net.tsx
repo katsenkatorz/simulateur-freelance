@@ -12,7 +12,7 @@ export function HeroNet({ net, ca, source = "Barème officiel 2026" }: HeroNetPr
   const pct = ca > 0 ? ((net / ca) * 100).toFixed(1) : "0.0"
 
   return (
-    <div className="text-center p-5 lg:p-6 bg-bg-card border border-border-subtle rounded-lg">
+    <div className="text-center p-5 lg:p-6 bg-bg-card border border-[#363636] rounded-lg">
       <div className="text-xs uppercase tracking-wider text-text-secondary">
         Vous gardez
       </div>

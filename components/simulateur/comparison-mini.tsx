@@ -49,7 +49,7 @@ export function ComparisonMini({ rows, selectedId, onSelect }: ComparisonMiniPro
             )}
           >
             <span className="flex items-center gap-2 text-left">
-              {Icon && <Icon size={14} className="text-text-tertiary shrink-0" />}
+              {Icon && <Icon size={14} className="shrink-0" style={{ color: row.struct.accent }} aria-hidden="true" />}
               <span className={cn("font-medium truncate", isSelected && "text-text-primary")}>{row.struct.name}</span>
             </span>
             <span className="font-mono text-right w-20">{fmt(row.net)}</span>
@@ -58,8 +58,8 @@ export function ComparisonMini({ rows, selectedId, onSelect }: ComparisonMiniPro
             <div className="flex items-center gap-2">
               <div className="flex-1 h-1.5 bg-bg-primary rounded-full overflow-hidden">
                 <div
-                  className={cn("h-full rounded-full transition-all duration-500", isSelected ? "bg-text-primary" : "bg-zinc-600")}
-                  style={{ width: pct + "%" }}
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: pct + "%", background: row.struct.accent }}
                 />
               </div>
               <span className="font-mono text-[10px] text-text-tertiary w-7 text-right">{pct}%</span>
