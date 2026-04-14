@@ -8,6 +8,7 @@ import {
   TRIMESTRE_SEUIL, QUATRE_TRIMESTRES,
 } from "./fiscal";
 import type { Line, ISResult, CotisItem, RetResult } from "./types";
+import { fmt, isLabel } from "./utils";
 
 // --- Moteur fiscal ---
 export function calcIR(rn: number, p: number): number {
@@ -31,15 +32,8 @@ export function calcIS(profit: number, seuil: number): ISResult {
   return { is15, is25, total: is15 + is25 };
 }
 
-export function fmt(n: number): string {
-  return Math.round(n).toLocaleString("fr-FR") + " €";
-}
-
-export function isLabel(is: ISResult): string {
-  if (!is || is.total === 0) return "IS : 0 €";
-  if (is.is25 === 0) return "IS 15% : " + fmt(is.is15);
-  return "IS 15% " + fmt(is.is15) + " + 25% " + fmt(is.is25);
-}
+// Re-exported from utils.ts — canonical location is now lib/utils.ts
+export { fmt, isLabel } from "./utils";
 
 // --- Simulations ---
 export function simMicro(ca: number, parts: number, isSeuil: number) {
