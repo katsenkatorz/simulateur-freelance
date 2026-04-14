@@ -20,12 +20,10 @@ import { cn } from "@/lib/utils";
 
 import { Header } from "@/components/layout/header";
 import { Sidebar, MobileControls } from "@/components/layout/sidebar";
-import { SankeyOverview } from "@/components/comparison/sankey-overview";
 import { FlowTab } from "@/components/detail/flow-tab";
 import { RepartitionBar, type Segment } from "@/components/simulateur/repartition-bar";
 import { TreemapDetail } from "@/components/simulateur/treemap-detail";
 import { ComparisonMini } from "@/components/simulateur/comparison-mini";
-import { simToSankey } from "@/lib/sankey";
 import { User, FileText, Building2, Landmark, Layers } from "lucide-react";
 import type { ElementType } from "react";
 
@@ -266,11 +264,8 @@ export default function App() {
     cotisItems = mkTNS(isB ? effSalB : (sim.nr || effSalB)); retData = retInfo("tns", isB ? effSalB : (sim.nr || effSalB), 0);
   }
 
-  const sankeyData = simToSankey(sim, sel, isB);
-
   const tabItems = [
     { k: "overview", l: "Synthèse" },
-    { k: "sankey", l: "Répartition" },
     { k: "flow", l: "Flux" },
     { k: "cotis", l: "Cotisations" },
   ];
@@ -421,12 +416,6 @@ export default function App() {
                 </div>
               );
             })()}
-            {tab === "sankey" && (
-              <div className="space-y-6">
-                <SankeyOverview data={sankeyData} accent={st.accent} />
-                <TreemapDetail sim={sim} cotisItems={cotisItems} ca={ca} sel={sel} isB={isB} />
-              </div>
-            )}
             {tab === "flow" && (
               <FlowTab
                 sel={sel} sim={sim} isB={isB} accent={st.accent}
