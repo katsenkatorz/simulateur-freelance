@@ -24,6 +24,8 @@ import { FlowTab } from "@/components/detail/flow-tab";
 import { RepartitionBar, type Segment } from "@/components/simulateur/repartition-bar";
 import { TreemapDetail } from "@/components/simulateur/treemap-detail";
 import { ComparisonMini } from "@/components/simulateur/comparison-mini";
+import { CascadeFlow, HeroNet } from "@/components/cascade";
+import { buildCascadeItems } from "@/lib/cascade-builder";
 import { User, FileText, Building2, Landmark, Layers } from "lucide-react";
 import type { ElementType } from "react";
 
@@ -180,7 +182,7 @@ export default function App() {
     gm: parseAsString.withDefault("A"),
     salB: parseAsInteger.withDefault(20400),
     mandatM: parseAsInteger.withDefault(6000),
-    tab: parseAsString.withDefault("overview"),
+    tab: parseAsString.withDefault("cascade"),
     regEI: parseAsString.withDefault("IS"),
     regEURL: parseAsString.withDefault("IS"),
     regSASU: parseAsString.withDefault("IS"),
@@ -264,7 +266,13 @@ export default function App() {
     cotisItems = mkTNS(isB ? effSalB : (sim.nr || effSalB)); retData = retInfo("tns", isB ? effSalB : (sim.nr || effSalB), 0);
   }
 
+  const cascadeItems = useMemo(
+    () => buildCascadeItems(sim, cotisItems, sel === "micro" ? mCA : ca),
+    [sim, cotisItems, ca, mCA, sel]
+  );
+
   const tabItems = [
+    { k: "cascade", l: "Cascade" },
     { k: "overview", l: "Synthèse" },
     { k: "flow", l: "Flux" },
     { k: "cotis", l: "Cotisations" },
@@ -326,6 +334,16 @@ export default function App() {
             </div>
 
             {/* Content */}
+            {tab === "cascade" && (
+              <div className="space-y-6 max-w-[600px] mx-auto">
+                <HeroNet net={sim.net} ca={sel === "micro" ? mCA : ca} />
+                <CascadeFlow items={cascadeItems} />
+                <div className="text-center font-mono text-xs text-text-tertiary border border-dashed border-border-subtle rounded p-2.5">
+                  <span className="text-positive">✓</span>{" "}
+                  Cotisations + Impôts + Net = {fmt(sel === "micro" ? mCA : ca)}
+                </div>
+              </div>
+            )}
             {tab === "overview" && (() => {
               const pCo = ca > 0 ? Math.round(sim.co / ca * 100) : 0;
               const pIr = ca > 0 ? Math.round(((sim.is || 0) + sim.ir) / ca * 100) : 0;
