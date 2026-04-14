@@ -26,6 +26,7 @@ import { TreemapDetail } from "@/components/simulateur/treemap-detail";
 import { ComparisonMini } from "@/components/simulateur/comparison-mini";
 import { CascadeFlow, HeroNet } from "@/components/cascade";
 import { buildCascadeItems } from "@/lib/cascade-builder";
+import { FlowTrigger } from "@/components/flow/flow-trigger";
 import { User, FileText, Building2, Landmark, Layers } from "lucide-react";
 import type { ElementType } from "react";
 
@@ -342,6 +343,12 @@ export default function App() {
                   <span className="text-positive">✓</span>{" "}
                   Cotisations + Impôts + Net = {fmt(sel === "micro" ? mCA : ca)}
                 </div>
+                <FlowTrigger
+                  showFlow={sel !== "micro" && !(sel === "ei" && regEI === "IR")}
+                  sel={sel} sim={sim} isB={isB} accent={st.accent}
+                  regEI={regEI} regEURL={regEURL} regSASU={regSASU}
+                  eiCanB={eiCanB} eurlCanB={eurlCanB} sasuCanB={sasuCanB}
+                />
               </div>
             )}
             {tab === "overview" && (() => {
