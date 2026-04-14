@@ -90,7 +90,7 @@ export function Sidebar({
             </button>
           ))}
         </div>
-        <p className="text-[10px] text-text-tertiary mt-1.5">1 = célib · 2 = couple · +0.5/enfant</p>
+        <p className="text-[10px] text-text-tertiary mt-1.5">1 = célibataire · 2 = couple · +0.5 par enfant</p>
       </div>
 
       {/* Stratégie */}
@@ -214,7 +214,7 @@ export function Sidebar({
       {/* Footer */}
       <div className="mt-auto pt-4 border-t border-border-subtle">
         <p className="text-[10px] text-text-tertiary leading-relaxed">
-          Simulation simplifiée · Micro BNC (34%) · Valider avec un expert-comptable
+          Simulation indicative · Vérifiez avec un expert-comptable
         </p>
       </div>
     </aside>
@@ -224,7 +224,10 @@ export function Sidebar({
 // Mobile version
 export function MobileControls({
   ca, setCa, parts, setParts, gm, setGm, isSeuilEtendu, setIsSeuilEtendu, isCapped, sel,
-}: Pick<SidebarProps, "ca" | "setCa" | "parts" | "setParts" | "gm" | "setGm" | "isSeuilEtendu" | "setIsSeuilEtendu" | "isCapped" | "sel">) {
+  regEI, setRegEI, regEURL, setRegEURL, regSASU, setRegSASU,
+}: Pick<SidebarProps, "ca" | "setCa" | "parts" | "setParts" | "gm" | "setGm" | "isSeuilEtendu" | "setIsSeuilEtendu" | "isCapped" | "sel" | "regEI" | "setRegEI" | "regEURL" | "setRegEURL" | "regSASU" | "setRegSASU">) {
+  const currentRegime = sel === "ei" ? regEI : sel === "eurl" ? regEURL : sel === "sasu" ? regSASU : null;
+  const setCurrentRegime = sel === "ei" ? setRegEI : sel === "eurl" ? setRegEURL : sel === "sasu" ? setRegSASU : null;
   return (
     <div className="lg:hidden border-b border-border-subtle bg-bg-card p-4">
       <CurrencyInput label="" value={ca} onChange={setCa} min={10_000} max={1_000_000} />
@@ -253,6 +256,23 @@ export function MobileControls({
             ))}
           </div>
         </div>
+        {/* Regime fiscal toggle — mobile */}
+        {currentRegime && setCurrentRegime && (
+          <div>
+            <div className="text-[10px] text-text-tertiary uppercase mb-1">Régime</div>
+            <div className="flex gap-0.5">
+              {[
+                { v: "IR", l: "IR (perso)" },
+                { v: "IS", l: "IS (société)" },
+              ].map(o => (
+                <button key={o.v} onClick={() => setCurrentRegime(o.v)}
+                  className={cn("flex-1 py-1.5 rounded text-[10px] font-semibold border",
+                    currentRegime === o.v ? "bg-text-primary text-bg-primary border-text-primary" : "text-text-tertiary border-border-subtle"
+                  )}>{o.l}</button>
+              ))}
+            </div>
+          </div>
+        )}
         {/* IS threshold toggle — accessible on mobile */}
         {sel !== "micro" && (
           <div className="mt-2">

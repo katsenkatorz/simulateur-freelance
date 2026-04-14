@@ -295,6 +295,8 @@ export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
           ca={ca} setCa={setCa} parts={parts} setParts={setParts}
           gm={gm} setGm={setGm} isSeuilEtendu={isSeuilEtendu} setIsSeuilEtendu={setIsSeuilEtendu}
           isCapped={isCapped} sel={sel}
+          regEI={regEI} setRegEI={setRegEI} regEURL={regEURL} setRegEURL={setRegEURL}
+          regSASU={regSASU} setRegSASU={setRegSASU}
         />
 
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
