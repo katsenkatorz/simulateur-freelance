@@ -144,6 +144,17 @@
   }
 }
 
+/* Flow arrow pulse animation */
+@keyframes flow-pulse {
+  0% { stroke-dashoffset: 20; opacity: 0.3; }
+  50% { opacity: 0.8; }
+  100% { stroke-dashoffset: 0; opacity: 0.5; }
+}
+.flow-arrow-line {
+  stroke-dasharray: 4 4;
+  animation: flow-pulse 1.5s ease-in-out infinite;
+}
+
 /* Hide scrollbar */
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }

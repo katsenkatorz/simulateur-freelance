@@ -25,9 +25,11 @@ import { RepartitionBar, type Segment } from "@/components/simulateur/repartitio
 import { TreemapDetail } from "@/components/simulateur/treemap-detail";
 import { ComparisonMini } from "@/components/simulateur/comparison-mini";
 import { CascadeFlow, HeroNet } from "@/components/cascade";
+import { HoldingFlow } from "@/components/cascade/holding-flow";
 import { buildCascadeItems } from "@/lib/cascade-builder";
 import { FlowTrigger } from "@/components/flow/flow-trigger";
-import { User, FileText, Building2, Landmark, Layers } from "lucide-react";
+import { getRecommendation } from "@/lib/recommendations";
+import { User, FileText, Building2, Landmark, Layers, Lightbulb } from "lucide-react";
 import type { ElementType } from "react";
 
 const STRUCT_ICONS: Record<string, ElementType> = {
@@ -334,7 +336,34 @@ export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
             {tab === "cascade" && (
               <div className="space-y-6 max-w-[600px] mx-auto">
                 <HeroNet net={sim.net} ca={sel === "micro" ? mCA : ca} />
-                <CascadeFlow items={cascadeItems} />
+
+                {/* Contextual recommendation */}
+                {(() => {
+                  const rec = getRecommendation(sel);
+                  if (!rec) return null;
+                  return (
+                    <div className="flex gap-3 p-4 bg-accent/5 border border-accent/20 rounded-lg">
+                      <Lightbulb size={16} className="text-accent shrink-0 mt-0.5" aria-hidden="true" />
+                      <div>
+                        <div className="text-xs font-medium text-accent mb-1.5">{rec.title}</div>
+                        <ul className="space-y-1">
+                          {rec.bullets.map((b, i) => (
+                            <li key={i} className="text-[11px] text-text-secondary leading-relaxed flex gap-1.5">
+                              <span className="text-accent/50 mt-0.5">›</span>
+                              <span>{b}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {sel === "holding" ? (
+                  <HoldingFlow sim={sim} />
+                ) : (
+                  <CascadeFlow items={cascadeItems} />
+                )}
                 <div className="text-center text-xs text-text-tertiary p-2">
                   <span className="text-positive">✓</span>{" "}
                   Tous les euros sont comptabilisés — chaque euro du CA est alloué

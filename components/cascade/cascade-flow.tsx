@@ -64,10 +64,10 @@ export function CascadeFlow({ items, className }: CascadeFlowProps) {
                     <stop offset="100%" stopColor={item.type === 'charge' ? 'var(--color-negative)' : item.type === 'tax' ? 'var(--color-tax)' : item.type === 'net' ? 'var(--color-positive)' : 'var(--color-accent)'} stopOpacity="0.5" />
                   </linearGradient>
                 </defs>
-                <line x1="12" y1="0" x2="12" y2="20" stroke={`url(#flow-grad-${i})`} strokeWidth="2">
-                  <animate attributeName="stroke-dashoffset" from="20" to="0" dur="0.8s" fill="freeze" />
-                </line>
-                <polygon points="7,18 17,18 12,26" fill={item.type === 'charge' ? 'var(--color-negative)' : item.type === 'tax' ? 'var(--color-tax)' : item.type === 'net' ? 'var(--color-positive)' : 'var(--color-accent)'} opacity="0.6" />
+                <line x1="12" y1="0" x2="12" y2="20" stroke={`url(#flow-grad-${i})`} strokeWidth="2" className="flow-arrow-line" style={{ animationDelay: `${i * 200}ms` }} />
+                <polygon points="7,18 17,18 12,26" fill={item.type === 'charge' ? 'var(--color-negative)' : item.type === 'tax' ? 'var(--color-tax)' : item.type === 'net' ? 'var(--color-positive)' : 'var(--color-accent)'} opacity="0.7">
+                  <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.5s" repeatCount="indefinite" begin={`${i * 0.2}s`} />
+                </polygon>
               </svg>
             </div>
           )}
