@@ -59,40 +59,43 @@ export function Sidebar({
     : [{ v: "IR", l: "IR (5 ans)" }, { v: "IS", l: "IS" }];
 
   return (
-    <aside className="w-[260px] shrink-0 h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-border-subtle bg-bg-card p-5 flex flex-col gap-6 max-lg:hidden">
-      {/* CA */}
-      <div>
+    <aside className="w-[280px] shrink-0 h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-border-subtle bg-bg-primary p-4 flex flex-col gap-4 max-lg:hidden">
+      {/* Card 1: Ma situation */}
+      <div className="bg-bg-card border border-[#363636] rounded-lg p-4 space-y-4">
+        <div className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">Ma situation</div>
         <CurrencyInput label="CA annuel HT" value={ca} onChange={setCa} min={10_000} max={1_000_000} />
         {isCapped && sel === "micro" && (
-          <p className="text-[11px] text-tax mt-2 flex items-center gap-1">
+          <p className="text-[11px] text-tax flex items-center gap-1">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-tax" />
             Micro plafonné à {fmt(MICRO_CAP)}
           </p>
         )}
-      </div>
 
-      {/* Parts IR */}
-      <div>
-        <SectionLabel icon={Users}>Parts fiscales</SectionLabel>
-        <div className="flex gap-1">
-          {[1, 1.5, 2, 2.5, 3].map(p => (
-            <button
-              key={p}
-              onClick={() => setParts(p)}
-              className={cn(
-                "flex-1 py-2 rounded-md text-sm font-semibold transition-all duration-200 border",
-                parts === p
-                  ? "bg-text-primary text-bg-primary border-text-primary"
-                  : "bg-transparent text-text-tertiary border-border-subtle hover:border-border-default"
-              )}
-            >
-              {p}
-            </button>
-          ))}
+        {/* Parts IR */}
+        <div>
+          <SectionLabel icon={Users}>Parts fiscales</SectionLabel>
+          <div className="flex gap-1">
+            {[1, 1.5, 2, 2.5, 3].map(p => (
+              <button
+                key={p}
+                onClick={() => setParts(p)}
+                className={cn(
+                  "flex-1 py-2 rounded-md text-sm font-semibold transition-all duration-200 border",
+                  parts === p
+                    ? "bg-text-primary text-bg-primary border-text-primary"
+                    : "bg-transparent text-text-tertiary border-border-subtle hover:border-border-default"
+                )}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-text-tertiary mt-1.5">1 = célibataire · 2 = couple · +0.5 par enfant</p>
         </div>
-        <p className="text-[10px] text-text-tertiary mt-1.5">1 = célibataire · 2 = couple · +0.5 par enfant</p>
       </div>
 
+      {/* Card 2: Paramètres avancés */}
+      <div className="bg-bg-card border border-[#363636] rounded-lg p-4 space-y-4">
       {/* Stratégie */}
       <div>
         <SectionLabel icon={Target}>Rémunération</SectionLabel>
@@ -211,8 +214,10 @@ export function Sidebar({
         </div>
       )}
 
+      </div>
+
       {/* Footer */}
-      <div className="mt-auto pt-4 border-t border-border-subtle">
+      <div className="mt-auto pt-4">
         <p className="text-[10px] text-text-tertiary leading-relaxed">
           Simulation indicative · Vérifiez avec un expert-comptable
         </p>
