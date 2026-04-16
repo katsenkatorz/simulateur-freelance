@@ -135,8 +135,9 @@ interface Line {
 ### Git
 
 - Commits en **anglais**
-- Branch principale : `main`
-- Branch de développement actuelle : `redesign`
+- Branch production : `main` (Vercel auto-deploy — JAMAIS de commit direct)
+- Branch intégration : `develop` (base de travail courante)
+- Gitflow strict : feature/* → develop → release/* → main (après confirmation Jeff)
 
 ## Évolutions prévues
 

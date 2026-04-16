@@ -52,3 +52,4 @@ new-ui-*.png
 _bmad-output/implementation-artifacts/
 _bmad-output/test-artifacts/
 _bmad-output/sprint-status.yaml
+.audit-screenshots/

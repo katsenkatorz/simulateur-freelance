@@ -63,6 +63,37 @@ Fonctions de calcul pures :
 - Micro-entreprise = BNC (abattement 34%), pas BIC
 - Commits in English
 
+## Git — Gitflow strict
+
+**`main` = production. Vercel auto-deploy depuis main. JAMAIS de commit/push direct sur main.**
+
+### Branches
+
+| Branch | Rôle | Merge vers |
+|--------|------|------------|
+| `main` | Production. Intouchable sauf merge de release | — |
+| `develop` | Intégration. Base de travail courante | main (via release) |
+| `feature/*` | Une feature ou story | develop |
+| `release/*` | Sprint terminé, stabilisation avant prod | main + develop |
+| `hotfix/*` | Fix urgent en prod | main + develop |
+
+### Règles
+
+1. **Tout développement part de `develop`**, jamais de main
+2. **Chaque story/feature** = branche `feature/<story-id>` depuis develop
+3. **Chaque sprint** = branche `release/<sprint-name>` depuis develop quand le sprint est prêt
+4. **Merge vers main** = mise en production. Nécessite confirmation explicite de Jeff ("on livre en prod")
+5. **INTERDIT** : commit direct sur main, push --force sur main, merge vers main sans demander
+6. **Si un agent/workflow veut merger vers main** → il DOIT demander "On livre en prod, tu es sûr ?" et attendre la confirmation
+
+### Workflow type
+
+```
+develop → feature/6-1-aria-keyboard → PR vers develop → merge
+develop → feature/6-2-slider-a11y → PR vers develop → merge
+develop → release/sprint-6 → stabilisation → merge main + develop (après confirmation Jeff)
+```
+
 ## BMAD Method
 
 This project uses [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) (v6.3.0) for structured AI-driven development.
