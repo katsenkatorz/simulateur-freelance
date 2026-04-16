@@ -74,10 +74,12 @@ export function Sidebar({
         {/* Parts IR */}
         <div>
           <SectionLabel icon={Users}>Parts fiscales</SectionLabel>
-          <div className="flex gap-1">
+          <div className="flex gap-1" role="radiogroup" aria-label="Parts fiscales">
             {[1, 1.5, 2, 2.5, 3].map(p => (
               <button
                 key={p}
+                role="radio"
+                aria-checked={parts === p}
                 onClick={() => setParts(p)}
                 className={cn(
                   "flex-1 py-2 rounded-md text-sm font-semibold transition-all duration-200 border",
@@ -99,7 +101,7 @@ export function Sidebar({
       {/* Stratégie */}
       <div>
         <SectionLabel icon={Target}>Rémunération</SectionLabel>
-        <div className="flex gap-1">
+        <div className="flex gap-1" role="radiogroup" aria-label="Stratégie de rémunération">
           {[
             { v: "A", l: "Tout en salaire" },
             { v: "B", l: "Garder en société" },
@@ -108,6 +110,8 @@ export function Sidebar({
             return (
             <button
               key={o.v}
+              role="radio"
+              aria-checked={gm === o.v}
               onClick={() => !isDisabled && setGm(o.v)}
               disabled={isDisabled}
               title={isDisabled ? "Non disponible en micro-entreprise" : undefined}
@@ -129,13 +133,15 @@ export function Sidebar({
       {/* Seuil IS */}
       <div>
         <SectionLabel icon={Scale}>Taux IS réduit (15%)</SectionLabel>
-        <div className="flex gap-1">
+        <div className="flex gap-1" role="radiogroup" aria-label="Seuil IS taux réduit">
           {[
             { v: false, l: "42 500 € (en vigueur)" },
             { v: true, l: "100 000 € (PLF 2026)" },
           ].map(o => (
             <button
               key={String(o.v)}
+              role="radio"
+              aria-checked={isSeuilEtendu === o.v}
               onClick={() => setIsSeuilEtendu(o.v)}
               className={cn(
                 "flex-1 py-2 rounded-md text-xs font-semibold transition-all duration-200 border",
@@ -167,10 +173,12 @@ export function Sidebar({
       {showRegimeToggle && (
         <div>
           <SectionLabel icon={Briefcase}>Régime fiscal</SectionLabel>
-          <div className="flex gap-1">
+          <div className="flex gap-1" role="radiogroup" aria-label="Régime fiscal">
             {regimeOptions.map(o => (
               <button
                 key={o.v}
+                role="radio"
+                aria-checked={currentReg === o.v}
                 onClick={() => setCurrentReg(o.v)}
                 className={cn(
                   "flex-1 py-2 rounded-md text-xs font-semibold transition-all duration-200 border",
@@ -194,7 +202,7 @@ export function Sidebar({
             <span className="text-xs text-text-tertiary">Rémunération</span>
             <span className="text-sm font-bold font-mono text-text-primary">{fmt(mandatM)}<span className="text-text-tertiary font-normal text-[10px]">/mois</span></span>
           </div>
-          <RangeSlider min={1000} max={Math.max(maxMandat, 2000)} step={500} value={mandatM} onChange={setMandatM} />
+          <RangeSlider min={1000} max={Math.max(maxMandat, 2000)} step={500} value={mandatM} onChange={setMandatM} label="Mandat présidence mensuel" />
         </div>
       )}
 
@@ -206,7 +214,7 @@ export function Sidebar({
             <span className="text-xs text-text-tertiary">Net mensuel</span>
             <span className="text-sm font-bold font-mono text-text-primary">{fmt(Math.round(salB / 12))}<span className="text-text-tertiary font-normal text-[10px]">/mois</span></span>
           </div>
-          <RangeSlider min={6000} max={maxSalB} step={1200} value={salB} onChange={setSalB} />
+          <RangeSlider min={6000} max={maxSalB} step={1200} value={salB} onChange={setSalB} label="Salaire gérant annuel" />
           <div className="flex justify-between text-[10px] text-text-tertiary mt-1">
             <span>{fmt(6000)}/an</span>
             <span>{fmt(maxSalB)}/an</span>
@@ -240,9 +248,9 @@ export function MobileControls({
       <div className="flex gap-4 mt-3">
         <div className="flex-1">
           <div className="text-[10px] text-text-tertiary uppercase mb-1">Parts</div>
-          <div className="flex gap-0.5">
+          <div className="flex gap-0.5" role="radiogroup" aria-label="Parts fiscales">
             {[1, 1.5, 2, 2.5, 3].map(p => (
-              <button key={p} onClick={() => setParts(p)}
+              <button key={p} role="radio" aria-checked={parts === p} onClick={() => setParts(p)}
                 className={cn("flex-1 py-1.5 rounded text-xs font-semibold border",
                   parts === p ? "bg-accent/15 text-accent border-accent/40" : "text-text-tertiary border-border-subtle"
                 )}>{p}</button>
@@ -251,9 +259,9 @@ export function MobileControls({
         </div>
         <div>
           <div className="text-[10px] text-text-tertiary uppercase mb-1">Mode</div>
-          <div className="flex gap-0.5">
+          <div className="flex gap-0.5" role="radiogroup" aria-label="Mode de rémunération">
             {([["A", "Salaire"], ["B", "Capital"]] as const).map(([v, label]) => (
-              <button key={v} onClick={() => setGm(v)}
+              <button key={v} role="radio" aria-checked={gm === v} onClick={() => setGm(v)}
                 aria-label={`Mode ${label}`}
                 className={cn("px-3 py-1.5 rounded text-xs font-semibold border",
                   gm === v ? "bg-accent/15 text-accent border-accent/40" : "text-text-tertiary border-border-subtle"
@@ -265,12 +273,12 @@ export function MobileControls({
         {currentRegime && setCurrentRegime && (
           <div>
             <div className="text-[10px] text-text-tertiary uppercase mb-1">Régime</div>
-            <div className="flex gap-0.5">
+            <div className="flex gap-0.5" role="radiogroup" aria-label="Régime fiscal">
               {[
                 { v: "IR", l: "IR (perso)" },
                 { v: "IS", l: "IS (société)" },
               ].map(o => (
-                <button key={o.v} onClick={() => setCurrentRegime(o.v)}
+                <button key={o.v} role="radio" aria-checked={currentRegime === o.v} onClick={() => setCurrentRegime(o.v)}
                   className={cn("flex-1 py-1.5 rounded text-[10px] font-semibold border",
                     currentRegime === o.v ? "bg-accent/15 text-accent border-accent/40" : "text-text-tertiary border-border-subtle"
                   )}>{o.l}</button>

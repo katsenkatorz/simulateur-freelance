@@ -316,6 +316,7 @@ export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
               {tabItems.map(t => (
                 <button
                   key={t.k}
+                  id={`tab-${t.k}`}
                   role="tab"
                   aria-selected={tab === t.k}
                   aria-controls={`panel-${t.k}`}
@@ -334,7 +335,7 @@ export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
 
             {/* Content */}
             {tab === "cascade" && (
-              <div className="space-y-6 max-w-[600px] mx-auto">
+              <div role="tabpanel" id="panel-cascade" aria-labelledby="tab-cascade" className="space-y-6 max-w-[600px] mx-auto">
                 <HeroNet net={sim.net} ca={sel === "micro" ? mCA : ca} />
 
                 {/* Contextual recommendation */}
@@ -398,7 +399,7 @@ export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
             )}
             {/* Overview and Flow tabs removed — content consolidated into Cascade tab */}
             {tab === "cotis" && (
-              <div className="space-y-4">
+              <div role="tabpanel" id="panel-cotis" aria-labelledby="tab-cotis" className="space-y-4">
                 {/* Résumé cotisations */}
                 <div className="border border-border-subtle rounded-lg p-5">
                   <div className="flex justify-between items-baseline pb-3 border-b border-border-subtle">
@@ -421,7 +422,11 @@ export default function App({ defaultSel = "micro" }: { defaultSel?: string }) {
                 </Section>
               </div>
             )}
-            {tab === "capital" && isB && <CapUsage type={sel === "holding" ? "holding" : sel} />}
+            {tab === "capital" && isB && (
+              <div role="tabpanel" id="panel-capital" aria-labelledby="tab-capital">
+                <CapUsage type={sel === "holding" ? "holding" : sel} />
+              </div>
+            )}
           </div>
         </main>
       </div>

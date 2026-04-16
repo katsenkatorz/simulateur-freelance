@@ -21,7 +21,7 @@
 
   --color-text-primary: #fafafa;
   --color-text-secondary: #a1a1aa;
-  --color-text-tertiary: #71717a;
+  --color-text-tertiary: #8b8b96;
 
   --color-accent: #6366f1;
   --color-accent-hover: #818cf8;
@@ -153,6 +153,22 @@
 .flow-arrow-line {
   stroke-dasharray: 4 4;
   animation: flow-pulse 1.5s ease-in-out infinite;
+}
+
+/* Press feedback on interactive buttons */
+button:active:not(:disabled),
+[role="button"]:active,
+a:active {
+  transition-duration: 80ms;
+}
+
+/* Hero glow pulse */
+@keyframes hero-glow {
+  0%, 100% { box-shadow: 0 0 60px rgba(34,197,94,0.06), inset 0 1px 0 rgba(34,197,94,0.1); }
+  50% { box-shadow: 0 0 80px rgba(34,197,94,0.10), inset 0 1px 0 rgba(34,197,94,0.15); }
+}
+.hero-glow {
+  animation: hero-glow 4s ease-in-out infinite;
 }
 
 /* Hide scrollbar */

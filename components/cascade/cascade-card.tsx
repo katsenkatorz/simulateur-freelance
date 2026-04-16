@@ -71,12 +71,15 @@ export function CascadeCard({
         `bg-gradient-to-br ${TYPE_TINTS[type]} to-bg-card`,
         "border-l-4",
         isDimmed && "opacity-40",
-        "hover:brightness-105",
+        "hover:scale-[1.015] hover:-translate-y-0.5 active:scale-[0.99]",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
       )}
       style={{
         borderLeftColor: TYPE_COLORS[type],
         transitionDelay: `${index * 80}ms`,
+        boxShadow: isExpanded
+          ? `0 4px 20px color-mix(in srgb, ${TYPE_COLORS[type]} 15%, transparent)`
+          : undefined,
       }}
       onClick={onTap}
       onKeyDown={(e) => {

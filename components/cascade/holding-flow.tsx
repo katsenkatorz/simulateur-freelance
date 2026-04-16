@@ -25,7 +25,7 @@ function FlowNode({ icon: Icon, label, amount, color, sub }: {
   icon: typeof Building2; label: string; amount: number; color: string; sub?: string
 }) {
   return (
-    <div className="flex items-center gap-3 p-3 bg-bg-card border rounded-lg" style={{ borderColor: `color-mix(in srgb, ${color} 40%, transparent)` }}>
+    <div className="flex items-center gap-3 p-3 bg-bg-card border rounded-lg transition-all duration-200 hover:scale-[1.01] hover:-translate-y-px" style={{ borderColor: `color-mix(in srgb, ${color} 40%, transparent)` }}>
       <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `color-mix(in srgb, ${color} 12%, transparent)` }}>
         <Icon size={14} style={{ color }} aria-hidden="true" />
       </div>

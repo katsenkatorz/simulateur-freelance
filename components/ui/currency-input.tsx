@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useId, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 const PRESETS = [30_000, 50_000, 100_000, 200_000, 500_000];
@@ -24,6 +24,7 @@ interface CurrencyInputProps {
 
 export function CurrencyInput({ value, onChange, min = 0, max = 1_000_000, label }: CurrencyInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const parsed = parseInput(e.target.value);
@@ -38,15 +39,17 @@ export function CurrencyInput({ value, onChange, min = 0, max = 1_000_000, label
   return (
     <div>
       {label && (
-        <label className="block text-xs font-medium text-text-secondary mb-2 uppercase tracking-wider">
+        <label htmlFor={inputId} className="block text-xs font-medium text-text-secondary mb-2 uppercase tracking-wider">
           {label}
         </label>
       )}
       <div className="relative">
         <input
           ref={inputRef}
+          id={inputId}
           type="text"
           inputMode="numeric"
+          aria-label={!label ? "Montant en euros" : undefined}
           value={formatDisplay(value)}
           onChange={handleChange}
           className={cn(
@@ -65,6 +68,7 @@ export function CurrencyInput({ value, onChange, min = 0, max = 1_000_000, label
           <button
             key={p}
             onClick={() => handlePreset(p)}
+            aria-label={`${p.toLocaleString("fr-FR")} euros`}
             className={cn(
               "flex-1 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
               "border",

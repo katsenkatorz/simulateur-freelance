@@ -14,15 +14,14 @@ export function HeroNet({ net, ca, source = "Barème officiel 2026" }: HeroNetPr
 
   return (
     <div
-      className="text-center p-6 lg:p-8 rounded-xl border border-positive/30 bg-gradient-to-b from-positive/[0.06] to-transparent relative overflow-hidden"
-      style={{ boxShadow: "0 0 60px rgba(34,197,94,0.06), inset 0 1px 0 rgba(34,197,94,0.1)" }}
+      className="text-center p-6 lg:p-8 rounded-xl border border-positive/30 bg-gradient-to-b from-positive/[0.06] to-transparent relative overflow-hidden hero-glow"
     >
       <CheckCircle2 size={20} className="text-positive mx-auto mb-2" aria-hidden="true" />
       <div className="text-[10px] uppercase tracking-widest text-positive/70 font-medium">
         Votre argent
       </div>
       <div
-        className="font-mono font-bold text-[36px] lg:text-[48px] text-positive mt-1 leading-tight"
+        className="font-mono font-bold text-[36px] lg:text-[48px] text-positive mt-1 leading-tight transition-all duration-500"
         aria-live="polite"
       >
         {fmt(net)}
